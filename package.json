@@ -24,13 +24,14 @@
                 ],
                 "aliases": [
                     "GTA3script"
-                ]
+                ],
+                "configuration": "./language-configuration.json"
             }
         ],
         "grammars": [
             {
                 "language": "gta3script",
-                "scopeName": "gta3script",
+                "scopeName": "source.gta3script",
                 "path": "./syntaxes/gta3script.tmLanguage"
             }
         ]
