@@ -4,11 +4,17 @@
     "description": "GTA3script support for VSCode",
     "version": "0.0.1",
     "publisher": "thelink2012",
+    "license": "MIT",
+    "repository": {
+        "type" : "git",
+        "url" : "https://github.com/thelink2012/vscode-gta3script.git"
+    },
     "engines": {
         "vscode": "^1.5.0"
     },
     "categories": [
-        "Languages"
+        "Languages",
+        "Snippets"
     ],
     "activationEvents": [
         "onLanguage:gta3script"
