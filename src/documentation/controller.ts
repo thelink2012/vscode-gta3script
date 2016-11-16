@@ -75,11 +75,11 @@ export class GTA3DocumentationController {
                 let providerDb = this.cachedDocs[providerName];
                 if(providerDb) {
                     let providerDoc = providerDb[command.name];
-                    if(providerDoc) {
+                    if(providerDoc && providerDoc.doc) {
                         return providerDoc.doc;
                     } else if(providerDoc === undefined) { // never tried to fetch from web
                         ++neverTriedToFetchCount;
-                    } else if(providerDoc === null) { // tried to fetch the web and got 404
+                    } else if(providerDoc.doc === null) { // tried to fetch the web and got 404
                         ++notFoundCount;
                     }
                 }

@@ -30,16 +30,16 @@ export class GTAGDocumentationProvider implements GTA3DocumentationProvider {
             let $ = cheerio.load(body);
             $(".opcodeinfo > tbody > tr > td").each((i, elem) => {
                 if(i == 0) { // Description
-                    let description = $(elem).html().replace(/<br>(?:<\/?br>)?/g, "\n");
-                    if(description) {
-                        result.shortDescription = description.split(/\.|\n/)[0]
-                        result.longDescription = description
+                    let elemHtml = $(elem).html();
+                    if(elemHtml) {
+                        result.shortDescription = $(`<span>${elemHtml.split(/\.|<br>/)[0]}</span>`).text()
+                        result.longDescription = this.htmlToMarkdown(elemHtml);
                     }
                 } else if(i == 1) { // Parameters
-                    let params = $(elem).html().split(/<br>(?:<\/?br>)?/g)
+                    let params = $(elem).html().split(/<br>/g)
                     result.args = params.map(p => {
-                        let m = p.match(/^\d+\)\s*(?:\(Returned\))?\s*([^\(]*)/);
-                        return { type: null, description: (m && m[0]) || null };
+                        let m = $(p).text().match(/^\d+\)\s*(?:\(Returned\))?\s*([^\(]*)/);
+                        return { type: null, description: (m && m[1]) || null };
                     });
                 } else if(i == 2) { // Games 
                     result.games = $(elem).children("img").map((_, img) => {
@@ -54,5 +54,9 @@ export class GTAGDocumentationProvider implements GTA3DocumentationProvider {
 
             return result;
         });
+    }
+
+    private htmlToMarkdown(html: string): string {
+        return html.replace(/<br>/g, "\n");;
     }
 }

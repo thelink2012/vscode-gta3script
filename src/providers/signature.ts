@@ -35,8 +35,7 @@ export class GTA3SignatureHelpProvider implements vscode.SignatureHelpProvider {
             return Promise.resolve(null);
         }
         
-        let descriptions = this.makeArgumentDescriptions(command.args)
-        let fullSignatureString = command.name + ' ' + descriptions.join(', ');
+        let [fullSignatureString, descriptions] = this.getSignatureForCommand(command);
 
         return this.gta3ctx.queryDocumentation(command).then((doc) => {
 
@@ -54,6 +53,16 @@ export class GTA3SignatureHelpProvider implements vscode.SignatureHelpProvider {
             signature.parameters = descriptions.map(desc => new vscode.ParameterInformation(desc));
             return Promise.resolve(this.makeSignatureHelp(signature, currentArg - 1));
         });
+    }
+    
+    public getCompleteSignatureForCommand(command: Command): string {
+        return this.getSignatureForCommand(command)[0];
+    }
+
+    public getSignatureForCommand(command: Command): [string, Array<string>] {
+        let descriptions = this.makeArgumentDescriptions(command.args)
+        let fullSignatureString =  command.name + ' ' + descriptions.join(', ');
+        return [fullSignatureString, descriptions];
     }
 
     private makeSignatureHelp(signature: vscode.SignatureInformation, activeParameter: number): vscode.SignatureHelp {

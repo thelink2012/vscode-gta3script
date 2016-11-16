@@ -1,13 +1,20 @@
 # GTA3script for Visual Studio Code
 
-This is an extension for VSCode which adds useful features for coding in GTA3script:
-
- + Code completion and suggestions.
- + Documentation for commands and its parameters.
+This is an extension for VSCode which adds support for GTA3script:
+ 
+ + Syntax highlighting.
+ + Auto-completion.
+ + Documentation for commands and its arguments.
 
 ## Features
 
-**TODO**
+![Much more](http://i.imgur.com/4pAZhGC.gif)
+<br><br>
+![Syntax Highlighting](http://i.imgur.com/VDwNc5p.gif)
+
+Direct link with improved quality for the gifs:
++ [First image](http://i.imgur.com/4pAZhGC.gifv).
++ [Second image](http://i.imgur.com/4pAZhGC.gifv).
 
 ## Requirements
 

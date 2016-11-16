@@ -19,7 +19,6 @@ export interface CommandDoc {
     shortDescription: string | null,    //< Short description in plaintext.
     longDescription: string | null,     //< Long description in Markdown.
     args: ArgumentDoc[],
-    examples: string[],
 }
 
 export interface GTA3DocumentationProvider {
