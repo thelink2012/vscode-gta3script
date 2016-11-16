@@ -10,16 +10,18 @@ import { GTA3HoverProvider } from './providers/hover';
 
 const GTA3_MODE: vscode.DocumentFilter = { language: 'gta3script', scheme: 'file' };
 
+import { GTA3DocumentationController } from './documentation/controller';
 import { GTAGDocumentationProvider } from './documentation/gtag';
 import { GTAModdingDocumentationProvider } from './documentation/gtamodding';
 
 export function activate(context: vscode.ExtensionContext) {
 
-    let gta3ctx = new GTA3ScriptController([new GTAModdingDocumentationProvider()]);
-    gta3ctx.loadConfig("gtasa").then(_ => {
-        console.log("UAU");
-        new GTAModdingDocumentationProvider().provideDocumentation(gta3ctx, gta3ctx.getCommand("CREATE_CAR"));
-    });
+    let docController = new GTA3DocumentationController([
+        new GTAModdingDocumentationProvider(),
+    ]);
+
+    let gta3ctx = new GTA3ScriptController(docController);
+    gta3ctx.loadConfig("gtasa");
 
     context.subscriptions.push(vscode.languages.registerCompletionItemProvider(GTA3_MODE, new GTA3CompletionItemProvider(gta3ctx), '.'));
     context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(GTA3_MODE, new GTA3SignatureHelpProvider(gta3ctx), '(', ',', ' '));

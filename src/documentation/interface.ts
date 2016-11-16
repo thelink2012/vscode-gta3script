@@ -10,14 +10,14 @@ export enum GameDoc {
 
 export interface ArgumentDoc {
     type: string | null,
-    description: string | null,     //< Description in Markdown
+    description: string | null,     //< Description in plaintext.
 }
 
 export interface CommandDoc {
     uri: string | null,
     games: GameDoc[],
-    shortDescription: string | null,    //< Short description in Markdown
-    longDescription: string | null,     //< Long description in Markdown
+    shortDescription: string | null,    //< Short description in plaintext.
+    longDescription: string | null,     //< Long description in Markdown.
     args: ArgumentDoc[],
     examples: string[],
 }

@@ -36,15 +36,32 @@ export class GTA3SignatureHelpProvider implements vscode.SignatureHelpProvider {
         }
         
         let descriptions = this.makeArgumentDescriptions(command.args)
+        let fullSignatureString = command.name + ' ' + descriptions.join(', ');
 
-        let signature = new vscode.SignatureInformation(command.name + ' ' + descriptions.join(', '), "Doc string");
-        signature.parameters = descriptions.map(desc => new vscode.ParameterInformation(desc));
+        return this.gta3ctx.queryDocumentation(command).then((doc) => {
 
+            let signature = new vscode.SignatureInformation(fullSignatureString, doc.shortDescription);
+            signature.parameters = descriptions.map((desc, i) => {
+                if(i < doc.args.length)
+                    return new vscode.ParameterInformation(desc, doc.args[i].description);
+                return new vscode.ParameterInformation(desc);
+            });
+
+            return this.makeSignatureHelp(signature, currentArg - 1);
+
+        }).catch((e) => {   // fallback
+            let signature = new vscode.SignatureInformation(fullSignatureString);
+            signature.parameters = descriptions.map(desc => new vscode.ParameterInformation(desc));
+            return Promise.resolve(this.makeSignatureHelp(signature, currentArg - 1));
+        });
+    }
+
+    private makeSignatureHelp(signature: vscode.SignatureInformation, activeParameter: number): vscode.SignatureHelp {
         let result = new vscode.SignatureHelp();
         result.signatures = [signature];
         result.activeSignature = 0;
-        result.activeParameter = currentArg - 1;
-        return Promise.resolve(result);
+        result.activeParameter = activeParameter;
+        return result;
     }
 
     private getArgumentDescription(arg: Argument): string {

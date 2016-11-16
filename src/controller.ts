@@ -1,5 +1,6 @@
 'use strict';
 import {GTA3DocumentationProvider, CommandDoc} from './documentation/interface'
+import {GTA3DocumentationController} from './documentation/controller'
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 const xml2js = require('xml2js');
@@ -33,9 +34,9 @@ export class GTA3ScriptController {
     private configToken : number;
     private config : string | null;
     private commands: CommandsDictionary | null;
-    private docs: GTA3DocumentationProvider[];
+    private docs: GTA3DocumentationController;
 
-    constructor(docs: GTA3DocumentationProvider[]) {
+    constructor(docs: GTA3DocumentationController) {
         this.configToken = 0;
         this.config = null;
         this.commands = null;
@@ -60,18 +61,7 @@ export class GTA3ScriptController {
 
     /// Gets documentation for the specified command.
     public queryDocumentation(command: Command): Promise<CommandDoc> {
-        // TODO cache
-
-        let performQuery = (i) => {
-            if(i < this.docs.length) {
-                return this.docs[i].provideDocumentation(this, command).catch(e => {
-                    return performQuery(i+1);
-                });
-            }
-            return Promise.reject(null);
-        };
-
-        return performQuery(0);
+        return this.docs.queryDocumentation(this, command);
     }
 
     /// Loads the specified configuration name.

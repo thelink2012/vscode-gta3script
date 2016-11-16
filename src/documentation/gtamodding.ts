@@ -3,10 +3,6 @@ import {GTA3DocumentationProvider, docrequest, CommandDoc, GameDoc, ArgumentDoc}
 import {GTA3ScriptController, Command} from '../controller';
 const cheerio = require('cheerio')
 
-// TODO compare the cost of requesting the full page and performing our parsing,
-// versus doing as we it is currently, quering only the first part with MediaWiki,
-//    parsing the JSON, then performing our parsing.
-
 export class GTAModdingDocumentationProvider implements GTA3DocumentationProvider {
     public getProviderName(): string {
         return "GTAModding";
@@ -60,7 +56,7 @@ export class GTAModdingDocumentationProvider implements GTA3DocumentationProvide
                     i = dtTable[$(elem).html()] || -1;
                 } else if(elem.name == "dd") {
                     if(i == 1) { // Description
-                        result.shortDescription = this.parseWikiText($(elem).text());
+                        result.shortDescription = this.toPlainText($(elem).text());
                     } else if(i == 2) { // Syntax
                         let text = $(elem).text();
                         // Discard 0000: or Class.Method syntax.
@@ -89,7 +85,7 @@ export class GTAModdingDocumentationProvider implements GTA3DocumentationProvide
                                 if(index != null) {
                                     result.args[index] = {
                                         type: null,
-                                        description: this.parseWikiText($(pelem).html()),
+                                        description: this.toPlainText($(pelem).text()),
                                     };
                                 }
                             }
@@ -102,7 +98,7 @@ export class GTAModdingDocumentationProvider implements GTA3DocumentationProvide
             let signString = "[[Category:OpCodes]]\n\n";
             if(pageText && pageText.startsWith(signString)) {
                 let longDescription = pageText.substr(signString.length);
-                result.longDescription = this.parseWikiText(longDescription);
+                result.longDescription = this.toMarkdown(longDescription);
             }
 
             return result;
@@ -110,10 +106,21 @@ export class GTAModdingDocumentationProvider implements GTA3DocumentationProvide
     }
 
     /// Parses a MediaWiki paragraph into Markdown.
-    private parseWikiText(text: string): string {
-        return text.replace(/\[\[([\w ]+)\|([^\]]+)\]\]/, "[$2](http://www.gtamodding.com/wiki/$1)")
+    private toMarkdown(text: string): string {
+        return text.replace(/\[\[([\w\(\) ]+)\|([^\]]+)\]\]/g, "[$2](http://www.gtamodding.com/wiki/$1)")
                    .replace(/\[\[([^\]]+)\]\]/g, "[$1](http://www.gtamodding.com/wiki/$1)")
-                   .replace(/'''([\w ]+)'''/, "**$1**")
-                   .replace(/''([\w ]+)''/, "*$1*");
+                   .replace(/'''([-\.\w ]+)'''/g, "**$1**")
+                   .replace(/''([-\.\w ]+)''/g, " _$1_");
+    }
+
+    /// Parses a MediaWiki paragraph into plaintext.
+    private toPlainText(text: string): string {
+        return text.replace(/\[\[([\w\(\) ]+)(?:#[\w ]+)?\|([^\]]+)\]\]/g, "$2")
+                   .replace(/\[\[([^\]]+)\]\]/g, "$1")
+                   .replace(/'/g, "");
     }
 }
+
+// TODO compare the cost of requesting the full page and performing our parsing,
+// versus doing as we it is currently, quering only the first part with MediaWiki,
+//    parsing the JSON, then performing our parsing.
