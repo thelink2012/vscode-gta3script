@@ -5,9 +5,6 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 const xml2js = require('xml2js');
 
-// ( |(?:".*?"))
-// ^\s*(?:\w+:)?\s*(?:(?:IF\s+)|(?:WHILE\s+))?(?:(?:AND\s+)|(?:OR\s+))?(?:NOT\s+)?([_\w]+)
-
 export interface Argument {
     type: string;
     enum: string | null;
@@ -64,6 +61,11 @@ export class GTA3ScriptController {
         return this.docs.queryDocumentation(this, command);
     }
 
+    /// Gets **cached** documentation for the specified command.
+    public queryCachedDocumentation(command: Command): CommandDoc | null {
+        return this.docs.queryCachedDocumentation(command) || null;
+    }
+
     /// Loads the specified configuration name.
     public loadConfig(configname: string): Thenable<any> {
         return this.parseConfigPath("C:/Projects/source/gta3script/config/" + configname)
@@ -81,34 +83,43 @@ export class GTA3ScriptController {
     }
 
     private parseConfigFile(configfile: string): Promise<CommandsDictionary> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) =>{
             fs.readFile(configfile, (err, data) => {
-                if(err) return reject(err);
+                if(err) {
+                    return reject(err);
+                }
                 xml2js.parseString(data, (err, result) => {
-                    if(err) return reject(err);
-
+                    if(err) {
+                        return reject(err);
+                    }
                     let map: CommandsDictionary = {}
                     for(const command of result.GTA3Script.Commands[0].Command) {
                         let id = null;
                         let hash = null;
-                        let args = ((command.Args && command.Args[0].Arg && command.Args[0].Arg) || [])
-                        if(command.$.ID != null) id = Number(command.$.ID);
-                        if(command.$.Hash != null) hash = Number(command.$.Hash);
+                        let args = []
+
+                        if(command.$.ID != null)
+                            id = Number(command.$.ID);
+                        if(command.$.Hash != null)
+                            hash = Number(command.$.Hash);
+                        if(command.Args && command.Args[0].Arg && command.Args[0].Arg)
+                            args = command.Args[0].Arg;
+
+                        args = args.map((arg) => { return {
+                            type: arg.$.Type,
+                            enum: arg.$.Enum || null,
+                            entity: arg.$.Entity || null,
+                            description: arg.$.Desc || null,
+                            optional: arg.$.Optional == "true",
+                            out: arg.$.Out == "true",
+                            ref: arg.$.Ref == "true",
+                        }});
+
                         map[command.$.Name] = {
                             name: command.$.Name,
                             id: id,
                             hash: hash,
-                            args: args.map((arg) => {
-                                return {
-                                    type: arg.$.Type,
-                                    enum: arg.$.Enum || null,
-                                    entity: arg.$.Entity || null,
-                                    description: arg.$.Desc || null,
-                                    optional: arg.$.Optional == "true",
-                                    out: arg.$.Out == "true",
-                                    ref: arg.$.Ref == "true",
-                                };
-                            }),
+                            args: args,
                         };
                     }
 

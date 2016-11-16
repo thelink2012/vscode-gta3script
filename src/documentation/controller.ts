@@ -56,7 +56,6 @@ export class GTA3DocumentationController {
         return this.queryWebDocumentation(context, command).then(tuple => {
             let [provider, doc] = tuple;
             console.log(`queryDocumentation got command ${command.name} from web provider ${provider.getProviderName()}`);
-            this.cacheCommandDoc(provider, command, doc);
             return doc;
         });
     }
@@ -64,8 +63,8 @@ export class GTA3DocumentationController {
     /// Gets documentation for the specified command in the memory/filesystem cache.
     ///
     /// Returns `null` for "tried all web providers, but they don't have documentation for this",
-    /// and `undefined` when there's no trace of documentation for this command on cache (i.e. try web).
-    private queryCachedDocumentation(command: Command): CommandDoc | null | undefined {
+    /// and `undefined` when there's no trace of documentation for this command on cache (i.e. go try the web).
+    public queryCachedDocumentation(command: Command): CommandDoc | null | undefined {
 
         let neverTriedToFetchCount = 0;
         let notFoundCount = 0;
@@ -98,8 +97,8 @@ export class GTA3DocumentationController {
         return performQuery(0);
     }
 
-    /// Gets documentation for the specified command in the web.
-    private queryWebDocumentation(context: GTA3ScriptController,
+    /// Gets documentation for the specified command using the web.
+    public queryWebDocumentation(context: GTA3ScriptController,
                                   command: Command): Promise<[GTA3DocumentationProvider, CommandDoc]> 
     {
         let failedCount = 0;
@@ -114,6 +113,7 @@ export class GTA3DocumentationController {
                         this.cacheCommandDoesNotExist(provider, command);
                         return performQuery(i+1);
                     }
+                    this.cacheCommandDoc(provider, command, doc);
                     return [provider, doc];
                 });
             }

@@ -74,6 +74,9 @@ export class GTA3SignatureHelpProvider implements vscode.SignatureHelpProvider {
     private makeArgumentDescriptions(args: Argument[]): string[] {
         let desc = new Array<string>();
         for(let i = 0; i < args.length; ++i) {
+            // VSCode expects each argument name to be unique, and we are giving only type names,
+            // which may conflict with each other. As a solution, we're using the invisible character
+            // U+200B * i at the bounds of the arguments. Dirty but clever.
             let argspec = '\u200B'.repeat(i)
             desc.push(argspec + this.getArgumentDescription(args[i]) + argspec);
         }

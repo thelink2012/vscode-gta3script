@@ -26,4 +26,3 @@ export class GTA3HoverProvider implements vscode.HoverProvider {
         });
     }
 }
-

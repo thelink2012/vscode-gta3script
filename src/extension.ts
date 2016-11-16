@@ -6,8 +6,6 @@ import { GTA3CompletionItemProvider } from './providers/completion';
 import { GTA3SignatureHelpProvider } from './providers/signature';
 import { GTA3HoverProvider } from './providers/hover';
 
-// TODO replace match with test
-
 const GTA3_MODE: vscode.DocumentFilter = { language: 'gta3script', scheme: 'file' };
 
 import { GTA3DocumentationController } from './documentation/controller';
@@ -17,7 +15,9 @@ import { GTAModdingDocumentationProvider } from './documentation/gtamodding';
 export function activate(context: vscode.ExtensionContext) {
 
     let docController = new GTA3DocumentationController([
+        // Order matters.
         new GTAModdingDocumentationProvider(),
+        new GTAGDocumentationProvider(),
     ]);
 
     let gta3ctx = new GTA3ScriptController(docController);

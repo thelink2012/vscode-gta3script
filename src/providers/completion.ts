@@ -17,22 +17,37 @@ export class GTA3CompletionItemProvider implements vscode.CompletionItemProvider
         let lineTillCurrentPosition = document.getText(new vscode.Range(position.line, 0, position.line, position.character));
 
         // Check if in the middle of typing a command name.
-        if(!lineTillCurrentPosition.match(/^\s*(?:\w+:)?\s*(?:(?:IF\s+)|(?:WHILE\s+))?(?:(?:AND\s+)|(?:OR\s+))?(?:NOT\s+)?([_\w]+)$/i))
+        let typedLettersM = lineTillCurrentPosition.match(/^\s*(?:\w+:)?\s*(?:(?:IF\s+)|(?:WHILE\s+))?(?:(?:AND\s+)|(?:OR\s+))?(?:NOT\s+)?([_\w]+)$/i);
+        if(!typedLettersM)
             return Promise.resolve(null);
-        
-        return this.getCachedCompletions();
+
+        console.log(`Completing ${typedLettersM[1]}`);
+        return this.getCommandCompletions();
     }
 
-    private getCachedCompletions(): Promise<vscode.CompletionItem[]> {
+    public resolveCompletionItem(item: vscode.CompletionItem,
+                                 token: vscode.CancellationToken): Thenable<vscode.CompletionItem>
+    {
+        if(item.kind != vscode.CompletionItemKind.Function || item.documentation != null)
+            return Promise.resolve(item);
+
+        let command = this.gta3ctx.getCommand(item.label);
+        return this.gta3ctx.queryDocumentation(command).then((doc) => {
+            // Note: this mutates this.cachedItems, but it's fine.
+            item.documentation = doc.longDescription;
+            return item;
+        });
+    }
+
+    private getCommandCompletions(): Promise<vscode.CompletionItem[]> {
         if(this.gta3ctx.getConfigToken() != this.configToken) {
             console.log("Caching completion list...");
             this.configToken = this.gta3ctx.getConfigToken();
-            this.cachedItems = [];
+            this.cachedItems = new Array<vscode.CompletionItem>();
             let commands = this.gta3ctx.getCommands();
-            for(const key in commands) {
-                if(commands.hasOwnProperty(key)) {
-                    let command = commands[key];
-                    let completion = new vscode.CompletionItem(command.name, vscode.CompletionItemKind.Function);
+            for(const name in commands) {
+                if(commands.hasOwnProperty(name)) {
+                    let completion = new vscode.CompletionItem(name, vscode.CompletionItemKind.Function);
                     this.cachedItems.push(completion);
                 }
             }

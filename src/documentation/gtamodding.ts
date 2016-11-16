@@ -60,7 +60,7 @@ export class GTAModdingDocumentationProvider implements GTA3DocumentationProvide
                     } else if(i == 2) { // Syntax
                         let text = $(elem).text();
                         // Discard 0000: or Class.Method syntax.
-                        if(!text.match(/^(?:(?:[A-Fa-f0-9]{4}:)|(?:[\w]+\.[\w]+))/)) {
+                        if(!/^(?:(?:[A-Fa-f0-9]{4}:)|(?:[\w]+\.[\w]+))/.test(text)) {
                             // Store the parameter names to use while parsing the 'Parameter' entries.
                             let regex = /\[''(\w+)''\]/g;
                             let match = regex.exec(text);
@@ -99,6 +99,8 @@ export class GTAModdingDocumentationProvider implements GTA3DocumentationProvide
             if(pageText && pageText.startsWith(signString)) {
                 let longDescription = pageText.substr(signString.length);
                 result.longDescription = this.toMarkdown(longDescription);
+            } else {
+                result.longDescription = result.shortDescription;
             }
 
             return result;
