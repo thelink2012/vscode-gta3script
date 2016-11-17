@@ -35,6 +35,7 @@ export class GTA3CompletionItemProvider implements vscode.CompletionItemProvider
         return this.gta3ctx.queryDocumentation(command).then((doc) => {
             // Note: this mutates this.cachedItems, but it's fine.
             item.documentation = doc.longDescription;
+            item.detail = this.gta3ctx.getGameSpec(doc.games, false);
             return item;
         });
     }

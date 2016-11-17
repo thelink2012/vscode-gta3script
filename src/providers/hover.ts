@@ -25,16 +25,19 @@ export class GTA3HoverProvider implements vscode.HoverProvider {
             return Promise.resolve(null);
         }
 
+        let signatureMarkdown = {
+            language: "gta3script",
+            value: this.signatureProvider.getCompleteSignatureForCommand(command)
+        };
+
         return this.gta3ctx.queryDocumentation(command).then((doc) => {
-            let signatureMarkdown = {
-                language: "gta3script",
-                value: this.signatureProvider.getCompleteSignatureForCommand(command)
-            };
             let descriptionText = doc.longDescription;
             if(doc.uri != null) {
                 descriptionText = `${descriptionText}\n\n[See online reference.](${doc.uri})`;
             }
             return new vscode.Hover([signatureMarkdown, descriptionText]);
+        }).catch(e => { // fallback
+            return new vscode.Hover([signatureMarkdown]);
         });
     }
 }

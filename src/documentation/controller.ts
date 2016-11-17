@@ -1,5 +1,5 @@
 'use strict';
-import {GTA3DocumentationProvider, CommandDoc} from './interface'
+import {GTA3DocumentationProvider, GameDoc, CommandDoc} from './interface'
 import {GTA3ScriptController, Command} from '../controller'
 
 interface CachedCommandDoc {
@@ -31,6 +31,25 @@ export class GTA3DocumentationController {
         for(let provider of this.docs) {
             this.cachedDocs[provider.getProviderName()] = {}
         }
+    }
+
+    public getPlainTextGameSpec(games: GameDoc[]): string {
+        let result = [];
+        if(games.indexOf(GameDoc.Liberty) != -1) result.push("GTA3");
+        if(games.indexOf(GameDoc.Miami) != -1) result.push("GTAVC");
+        if(games.indexOf(GameDoc.SanAndreas) != -1) result.push("GTASA");
+        return result.join('|');
+    }
+
+    public getMarkdownGameSpec(games: GameDoc[]): string {
+        let result = "";
+        if(games.indexOf(GameDoc.Liberty) != -1)
+            result += ("![GTA3](http://media.gtanet.com/gtamodding/thumb/f/f3/Gta3.png/16px-Gta3.png)");
+        if(games.indexOf(GameDoc.Miami) != -1)
+            result += ("![GTAVC](http://media.gtanet.com/gtamodding/thumb/e/ef/Vc.png/16px-Vc.png)");
+        if(games.indexOf(GameDoc.SanAndreas) != -1)
+            result += ("![GTASA](http://media.gtanet.com/gtamodding/thumb/4/4e/Sa.png/16px-Sa.png)");
+        return result;
     }
 
     public loadCache() {

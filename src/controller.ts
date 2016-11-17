@@ -1,5 +1,5 @@
 'use strict';
-import {GTA3DocumentationProvider, CommandDoc} from './documentation/interface'
+import {GTA3DocumentationProvider, GameDoc, CommandDoc} from './documentation/interface'
 import {GTA3DocumentationController} from './documentation/controller'
 import * as vscode from 'vscode';
 import * as fs from 'fs';
@@ -64,6 +64,13 @@ export class GTA3ScriptController {
     /// Gets **cached** documentation for the specified command.
     public queryCachedDocumentation(command: Command): CommandDoc | null {
         return this.docs.queryCachedDocumentation(command) || null;
+    }
+
+    public getGameSpec(games: GameDoc[], markdown: boolean): string {
+        if(markdown)
+            return this.docs.getMarkdownGameSpec(games);
+        else
+            return this.docs.getPlainTextGameSpec(games);
     }
 
     /// Loads the specified configuration name.

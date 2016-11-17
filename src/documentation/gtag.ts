@@ -48,7 +48,7 @@ export class GTAGDocumentationProvider implements GTA3DocumentationProvider {
                         if(src.endsWith("/vc.gif")) return GameDoc.Miami;
                         if(src.endsWith("/iii.gif")) return GameDoc.Liberty;
                         return null;
-                    }).filter(x => x != null);
+                    }).filter(x => x != null).toArray();
                 }
             });
 
