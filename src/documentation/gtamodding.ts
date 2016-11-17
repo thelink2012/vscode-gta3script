@@ -50,45 +50,21 @@ export class GTAModdingDocumentationProvider implements GTA3DocumentationProvide
             if(gameIcons.indexOf("File:Gta3.png") != -1) result.games.push(GameDoc.Liberty);
 
             let i = -1;
-            let dtTable = { "Description": 1, "Syntax": 2, "Parameter": 3 }
-            let paramNames = null;
+            let dtTable = { "Description": 1, "Parameter": 3 }
             $("dl.opcode").children().each((_, elem) => {
                 if(elem.name == "dt") {
                     i = dtTable[$(elem).html()] || -1;
                 } else if(elem.name == "dd") {
                     if(i == 1) { // Description
                         result.shortDescription = this.toPlainText($(elem).text());
-                    } else if(i == 2) { // Syntax
-                        let text = $(elem).text();
-                        // Discard 0000: or Class.Method syntax.
-                        if(!/^(?:(?:[A-Fa-f0-9]{4}:)|(?:[\w]+\.[\w]+))/.test(text)) {
-                            // Store the parameter names to use while parsing the 'Parameter' entries.
-                            let regex = /\[''(\w+)''\]/g;
-                            let match = regex.exec(text);
-                            let paramCount = 0;
-                            paramNames = {}
-                            while (match != null) {
-                                paramNames[match[1]] = paramCount++;
-                                match = regex.exec(text);
-                            }
-                            result.args = new Array<ArgumentDoc>(paramCount);
-                        }
-                    } else if(i == 3 && paramNames) { // Parameter
-                        let currentParamName = null;
+                    } else if(i == 3) { // Parameter
                         $(elem.firstChild).children().each((pid, pelem) => {
                             // Assumes even nodes are <dt> and odd are <dd>
-                            if((pid % 2) == 0) { // <dt>
-                                let regex = /\[''(\w+)''\]/;
-                                let match = regex.exec($(pelem).text());
-                                currentParamName = (match && match[1]) || null;
-                            } else { // <dd>
-                                let index = paramNames[currentParamName];
-                                if(index != null) {
-                                    result.args[index] = {
-                                        type: null,
-                                        description: this.toPlainText($(pelem).text()),
-                                    };
-                                }
+                            if((pid % 2) != 0) { // <dd>
+                                result.args.push({
+                                    type: null,
+                                    description: this.toPlainText($(pelem).text()),
+                                });
                             }
                         });
                     }
@@ -105,6 +81,7 @@ export class GTAModdingDocumentationProvider implements GTA3DocumentationProvide
                     longDescription = longDescription[thisOpString.length].toUpperCase() +
                                         longDescription.slice(thisOpString.length+1);
                 }
+                // Additional fix ups.
                 longDescription = this.replaceOpcodesByCommands(longDescription, context);
                 result.longDescription = this.toMarkdown(longDescription);
             } else {
