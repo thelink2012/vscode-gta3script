@@ -31,12 +31,14 @@ export class GTA3ScriptController {
     private configToken : number;
     private config : string | null;
     private commands: CommandsDictionary | null;
+    private commandsById: {};
     private docs: GTA3DocumentationController;
 
     constructor(docs: GTA3DocumentationController) {
         this.configToken = 0;
         this.config = null;
-        this.commands = null;
+        this.commands = {};
+        this.commandsById = [];
         this.docs = docs
     }
 
@@ -53,7 +55,12 @@ export class GTA3ScriptController {
 
     /// Gets the dictionary of currently loaded commands.
     public getCommands(): CommandsDictionary {
-        return this.commands || {};
+        return this.commands;
+    }
+
+    /// Gets a command by its opcode id.
+    public getCommandById(id: number): Command | null {
+        return this.commandsById[id];
     }
 
     /// Gets documentation for the specified command.
@@ -66,6 +73,8 @@ export class GTA3ScriptController {
         return this.docs.queryCachedDocumentation(command) || null;
     }
 
+    /// Gets an string specifying the supported games.
+    /// For Markdown, uses icons.
     public getGameSpec(games: GameDoc[], markdown: boolean): string {
         if(markdown)
             return this.docs.getMarkdownGameSpec(games);
@@ -79,6 +88,7 @@ export class GTA3ScriptController {
             .then((value) => {
                 this.config = configname;
                 this.commands = value;
+                this.computeByIdTable();
                 ++this.configToken;
             }).catch((err) => {
                 console.log("failed to load gta3sc config", err.message);
@@ -135,4 +145,17 @@ export class GTA3ScriptController {
             })
         });
     }
+
+    private computeByIdTable() {
+        this.commandsById = {}
+        for(let name in this.commands) {
+            if(this.commands.hasOwnProperty(name)) {
+                let command = this.commands[name];
+                if(command.id != null) {
+                    this.commandsById[command.id] = command;
+                }
+            }
+        }
+    }
+
 }
