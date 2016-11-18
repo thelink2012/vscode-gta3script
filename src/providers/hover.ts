@@ -5,10 +5,9 @@ import {GTA3SignatureHelpProvider} from './signature';
 
 export class GTA3HoverProvider implements vscode.HoverProvider {
     
-    private signatureProvider: GTA3SignatureHelpProvider; 
-
-    public constructor(private gta3ctx: GTA3ScriptController) {
-        this.signatureProvider = new GTA3SignatureHelpProvider(this.gta3ctx);
+    public constructor(private gta3ctx: GTA3ScriptController,
+                       private signatureProvider: GTA3SignatureHelpProvider)
+    {
     }
 
     public provideHover(document: vscode.TextDocument,
@@ -18,8 +17,6 @@ export class GTA3HoverProvider implements vscode.HoverProvider {
         let wordRange = document.getWordRangeAtPosition(position);
         let hoverText = document.getText(wordRange);
         
-        console.log(`Hovering ${hoverText}`);
-
         let command = this.gta3ctx.getCommand(hoverText);
         if(command == null) {
             return Promise.resolve(null);

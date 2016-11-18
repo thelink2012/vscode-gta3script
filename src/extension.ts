@@ -23,9 +23,10 @@ export function activate(context: vscode.ExtensionContext) {
     let gta3ctx = new GTA3ScriptController(docController);
     gta3ctx.loadConfig("gtasa");
 
-    context.subscriptions.push(vscode.languages.registerCompletionItemProvider(GTA3_MODE, new GTA3CompletionItemProvider(gta3ctx), '.'));
-    context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(GTA3_MODE, new GTA3SignatureHelpProvider(gta3ctx), '(', ',', ' '));
-    context.subscriptions.push(vscode.languages.registerHoverProvider(GTA3_MODE, new GTA3HoverProvider(gta3ctx)));
+    let sighelp = new GTA3SignatureHelpProvider(gta3ctx);
+    context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(GTA3_MODE, sighelp, '(', ',', ' '));
+    context.subscriptions.push(vscode.languages.registerCompletionItemProvider(GTA3_MODE, new GTA3CompletionItemProvider(gta3ctx, sighelp), '.'));////////////////////////////////////////////////
+    context.subscriptions.push(vscode.languages.registerHoverProvider(GTA3_MODE, new GTA3HoverProvider(gta3ctx, sighelp)));
 }
 
 export function deactivate() {

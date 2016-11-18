@@ -1,13 +1,16 @@
 'use strict';
 import * as vscode from 'vscode';
 import {GTA3ScriptController} from '../controller';
+import {GTA3SignatureHelpProvider} from './signature';
 
 export class GTA3CompletionItemProvider implements vscode.CompletionItemProvider {
 
     private configToken: number = -1;
     private cachedItems: vscode.CompletionItem[];
 
-    public constructor(private gta3ctx: GTA3ScriptController) {
+    public constructor(private gta3ctx: GTA3ScriptController,
+                       private signatureProvider: GTA3SignatureHelpProvider)
+    {
     }
 
     public provideCompletionItems(document: vscode.TextDocument,
@@ -17,12 +20,28 @@ export class GTA3CompletionItemProvider implements vscode.CompletionItemProvider
         let lineTillCurrentPosition = document.getText(new vscode.Range(position.line, 0, position.line, position.character));
 
         // Check if in the middle of typing a command name.
-        let typedLettersM = lineTillCurrentPosition.match(/^\s*(?:\w+:)?\s*(?:(?:IF\s+)|(?:WHILE\s+))?(?:(?:AND\s+)|(?:OR\s+))?(?:NOT\s+)?([_\w]+)$/i);
-        if(!typedLettersM)
+        let typingCommand = lineTillCurrentPosition.match(/^\s*(?:\w+:\s*)?(?:IF\s+|WHILE\s+|IFNOT\s+|WHILENOT\s+)?(?:AND\s+|OR\s+)?(?:NOT\s+)?([_\w]+)$/i);
+        if(typingCommand) {
+            return this.getCommandCompletions();
+        }
+
+        // Check if in the middle of a argument then.
+        let basicSignature = this.signatureProvider.provideBasicSignatureHelp(document, position);
+        if(basicSignature == null || basicSignature.activeArgument == null)
             return Promise.resolve(null);
 
-        console.log(`Completing ${typedLettersM[1]}`);
-        return this.getCommandCompletions();
+        // Check if argument is an enumeration.
+        if(basicSignature.activeArgument.enum && !basicSignature.activeArgument.out) {
+            let constants = this.gta3ctx.getEnumeration(basicSignature.activeArgument.enum);
+            let items = constants.map(([name, value]) => {
+                let item = new vscode.CompletionItem(name, vscode.CompletionItemKind.Enum);
+                item.detail = value.toString();
+                return item;
+            });
+            return Promise.resolve(items);
+        }
+
+        return Promise.resolve(null);
     }
 
     public resolveCompletionItem(item: vscode.CompletionItem,
@@ -33,12 +52,13 @@ export class GTA3CompletionItemProvider implements vscode.CompletionItemProvider
 
         let command = this.gta3ctx.getCommand(item.label);
         return this.gta3ctx.queryDocumentation(command).then((doc) => {
-            // Note: this mutates this.cachedItems, but it's fine.
+            // Note: this mutates this.cachedItems, but it's okay.
             item.documentation = doc.longDescription;
             item.detail = this.gta3ctx.getGameSpec(doc.games, false);
             return item;
         });
     }
+
 
     private getCommandCompletions(): Promise<vscode.CompletionItem[]> {
         if(this.gta3ctx.getConfigToken() != this.configToken) {

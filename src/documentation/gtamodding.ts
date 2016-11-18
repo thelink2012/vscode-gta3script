@@ -76,15 +76,20 @@ export class GTAModdingDocumentationProvider implements GTA3DocumentationProvide
             let thisOpString = "This opcode ";
             if(pageText && pageText.startsWith(signString)) {
                 let longDescription = pageText.substr(signString.length);
-                // Remove "^This opcode x" portion of the string and capitalize x.
-                if(longDescription.startsWith(thisOpString) && longDescription.length > thisOpString.length+2) {
-                    longDescription = longDescription[thisOpString.length].toUpperCase() +
-                                        longDescription.slice(thisOpString.length+1);
+                // Check if long description is not a table or something weird else not texty.
+                if(longDescription[0].toUpperCase() >= 'A' && longDescription[0].toUpperCase() <= 'Z') {
+                    // Remove "^This opcode x" portion of the string and capitalize it.
+                    if(longDescription.startsWith(thisOpString) && longDescription.length > thisOpString.length+2) {
+                        longDescription = longDescription[thisOpString.length].toUpperCase() +
+                                            longDescription.slice(thisOpString.length+1);
+                    }
+                    // Additional fix ups.
+                    longDescription = this.replaceOpcodesByCommands(longDescription, context);
+                    result.longDescription = this.toMarkdown(longDescription);
                 }
-                // Additional fix ups.
-                longDescription = this.replaceOpcodesByCommands(longDescription, context);
-                result.longDescription = this.toMarkdown(longDescription);
-            } else {
+            }
+            
+            if(!result.longDescription) {
                 result.longDescription = result.shortDescription;
             }
 
