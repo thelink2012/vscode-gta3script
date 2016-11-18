@@ -23,6 +23,7 @@ export interface CompilerResult {
     helper: string | null,
 }
 
+/// Invokes the script compiler and returns its diagnostics.
 export function invokeCompiler(wsconfig: vscode.WorkspaceConfiguration,
                                filename: string, cfgname: string): Promise<CompilerResult[]>
 {

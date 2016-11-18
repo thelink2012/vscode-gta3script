@@ -64,9 +64,9 @@
                 "gta3script.buildflags": {
                     "type": "object",
                     "default": {
-                        "gta3": [],
-                        "gtavc": [],
-                        "gtasa": ["--guesser"]
+                        "gta3": ["--cs"],
+                        "gtavc": ["--cs"],
+                        "gtasa": ["--guesser", "--cs"]
                     },
                     "description": "Specifies build flags to be sent to the compiler for each configuration type."
                 },

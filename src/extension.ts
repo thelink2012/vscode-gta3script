@@ -15,8 +15,8 @@ import { GTA3DocumentationController } from './documentation/controller';
 import { GTAGDocumentationProvider } from './documentation/gtag';
 import { GTAModdingDocumentationProvider } from './documentation/gtamodding';
 
-export function activate(context: vscode.ExtensionContext) {
-    
+export function activate(context: vscode.ExtensionContext) 
+{
     console.log("gta3script extension being activated");
 
     let wsconfig = vscode.workspace.getConfiguration("gta3script");
@@ -40,14 +40,42 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.languages.registerHoverProvider(GTA3_MODE, new GTA3HoverProvider(gta3ctx, sighelp)));
 
     context.subscriptions.push(vscode.commands.registerCommand('gta3script.build.build', () => {
-        build().catch(_ => _);
+        build();
     }));
 }
 
-export function deactivate() {
+export function deactivate()
+{
 }
 
-function build(): Promise<void>
+function build(): Thenable<void>
+{
+    let wsconfig = vscode.workspace.getConfiguration("gta3script");
+    let cfgname = wsconfig.get<string>("config");
+
+    diagnosticCollection.clear();
+
+    if(vscode.workspace.rootPath === undefined) {
+        let editor = vscode.window.activeTextEditor;
+        if(!editor || editor.document.languageId !== 'gta3script') {
+            vscode.window.showInformationMessage("Current file is not a GTA3script file.");
+            return Promise.reject(null);
+        }
+        return buildFile(wsconfig, cfgname, editor.document.uri.fsPath).catch(() => {});
+    }
+
+    return vscode.workspace.findFiles("*.sc", "").then(uris => {
+        let promise = Promise.resolve();
+        uris.map(uri => uri.fsPath).forEach(file => { // build one after the other
+            promise = promise.then(() => buildFile(wsconfig, cfgname, file));
+        });
+        return promise.catch(() => {}); // avoid unhandled broken promises on debugging
+    });
+}
+
+function buildFile(wsconfig: vscode.WorkspaceConfiguration,
+                   cfgname: string,
+                   filename: string): Promise<void> 
 {
     let mapTypeToSeverity = type => {
         switch(type) {
@@ -59,18 +87,8 @@ function build(): Promise<void>
         }
     };
 
-    let editor = vscode.window.activeTextEditor;
-    if(!editor || editor.document.languageId !== 'gta3script') {
-        return Promise.reject("Current file is not a GTA3script file.");
-    }
-
-    let wsconfig = vscode.workspace.getConfiguration("gta3script");
-    let cfgname = wsconfig.get<string>("config");
-    let filename = editor.document.uri.fsPath;
-
     return invokeCompiler(wsconfig, filename, cfgname).then(diags => {
         let anyError = false;
-        diagnosticCollection.clear();
 
         let diagnosticMap: Map<string, vscode.Diagnostic[]> = new Map();
 
@@ -92,7 +110,7 @@ function build(): Promise<void>
             let length = diag.length || 1;
 
             let range = new vscode.Range(lineno-1, colno-1, lineno-1, colno+length-1);
-            let diagnostic = new vscode.Diagnostic(range, diag.message.split('\n')[0], severity);
+            let diagnostic = new vscode.Diagnostic(range, diag.message, severity);
 
             let diagnostics = diagnosticMap.get(canonicalFile);
             if (!diagnostics) {
@@ -102,9 +120,9 @@ function build(): Promise<void>
             diagnosticMap.set(canonicalFile, diagnostics);
         }
 
-		diagnosticMap.forEach((diags, file) => {
-			diagnosticCollection.set(vscode.Uri.parse(file), diags);
-		});
+        diagnosticMap.forEach((diags, file) => {
+            diagnosticCollection.set(vscode.Uri.parse(file), diags);
+        });
 
         if(anyError) {
             return Promise.reject("Compilation failed.")
