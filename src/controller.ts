@@ -9,7 +9,7 @@ export interface Argument {
     type: string;
     enum: string | null;
     entity: string | null;
-    description: string | null;
+    hint: string | null;
     optional: boolean;
     out: boolean;
     ref: boolean;
@@ -191,7 +191,7 @@ export class GTA3ScriptController {
                                 type: arg.$.Type,
                                 enum: arg.$.Enum || null,
                                 entity: arg.$.Entity || null,
-                                description: arg.$.Desc || null,
+                                hint: arg.$.Desc || null,
                                 optional: arg.$.Optional == "true",
                                 out: arg.$.Out == "true",
                                 ref: arg.$.Ref == "true",

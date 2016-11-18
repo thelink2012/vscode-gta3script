@@ -138,7 +138,7 @@ export class GTA3SignatureHelpProvider implements vscode.SignatureHelpProvider {
     private getArgumentType(arg: Argument): string {
         if(arg.enum != null) return arg.enum;
         if(arg.entity != null) return arg.entity;
-        if(arg.description != null) return arg.description;
+        if(arg.hint != null) return arg.hint; // previously known as "Desc"
         return arg.type;
     }
 

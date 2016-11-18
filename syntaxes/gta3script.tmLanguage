@@ -2,40 +2,40 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>bundleUUID</key>
-	<string>E1E14662-0C3F-4423-866F-3D35BA780DD9</string>
-	<key>name</key>
-	<string>GTA3Script</string>
-	<key>scopeName</key>
-	<string>source.gta3script</string>
-	<key>fileTypes</key>
-	<array>
-		<string>sc</string>
-	</array>
+    <key>bundleUUID</key>
+    <string>E1E14662-0C3F-4423-866F-3D35BA780DD9</string>
+    <key>name</key>
+    <string>GTA3Script</string>
+    <key>scopeName</key>
+    <string>source.gta3script</string>
+    <key>fileTypes</key>
+    <array>
+        <string>sc</string>
+    </array>
     <key>patterns</key>
     <array>
         <dict>
-			<key>match</key>
-			<string>(//).*$\n?</string>
-			<key>name</key>
-			<string>comment.line.double-slash.gta3script</string>
+            <key>match</key>
+            <string>(//).*$\n?</string>
+            <key>name</key>
+            <string>comment.line.double-slash.gta3script</string>
         </dict>
-		<dict>
-			<key>begin</key>
-			<string>/\*</string>
-			<key>end</key>
-			<string>\*/</string>
-			<key>name</key>
-			<string>comment.block.gta3script</string>
-		</dict>
-		<dict>
-			<key>begin</key>
-			<string>"</string>
-			<key>end</key>
-			<string>"</string>
-			<key>name</key>
-			<string>string.quoted.double.gta3script</string>
-		</dict>
+        <dict>
+            <key>begin</key>
+            <string>/\*</string>
+            <key>end</key>
+            <string>\*/</string>
+            <key>name</key>
+            <string>comment.block.gta3script</string>
+        </dict>
+        <dict>
+            <key>begin</key>
+            <string>"</string>
+            <key>end</key>
+            <string>"</string>
+            <key>name</key>
+            <string>string.quoted.double.gta3script</string>
+        </dict>
         <dict>
             <key>match</key>
             <string>\b((0x[0-9A-Fa-f\-]+)|([0-9\-]+)|([0-9\.fF]+))\b</string>
@@ -46,7 +46,7 @@
             <key>match</key>
             <string>^\s*\S+:</string>
             <key>name</key>
-            <string>entity.name.function</string>
+            <string>entity.name.function.gta3script</string>
         </dict>
         <dict>
             <key>match</key>

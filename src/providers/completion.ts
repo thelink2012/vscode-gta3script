@@ -31,8 +31,9 @@ export class GTA3CompletionItemProvider implements vscode.CompletionItemProvider
             return Promise.resolve(null);
 
         // Check if argument is an enumeration.
-        if(basicSignature.activeArgument.enum && !basicSignature.activeArgument.out) {
-            let constants = this.gta3ctx.getEnumeration(basicSignature.activeArgument.enum);
+        let enumName = basicSignature.activeArgument.enum || (basicSignature.activeArgument.hint == "Bool"? "BOOL" : null);
+        if(enumName) {
+            let constants = this.gta3ctx.getEnumeration(enumName);
             let items = constants.map(([name, value]) => {
                 let item = new vscode.CompletionItem(name, vscode.CompletionItemKind.Enum);
                 item.detail = value.toString();
