@@ -31,23 +31,23 @@ export function activate(context: vscode.ExtensionContext) {
     let gta3ctx = new GTA3ScriptController(docController);
     gta3ctx.loadConfig(wsconfig.get<string>("config"));
 
-	diagnosticCollection = vscode.languages.createDiagnosticCollection('gta3script');
-	context.subscriptions.push(diagnosticCollection);
+    diagnosticCollection = vscode.languages.createDiagnosticCollection('gta3script');
+    context.subscriptions.push(diagnosticCollection);
 
     let sighelp = new GTA3SignatureHelpProvider(gta3ctx);
     context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(GTA3_MODE, sighelp, '(', ',', ' '));
     context.subscriptions.push(vscode.languages.registerCompletionItemProvider(GTA3_MODE, new GTA3CompletionItemProvider(gta3ctx, sighelp), '.'));////////////////////////////////////////////////
     context.subscriptions.push(vscode.languages.registerHoverProvider(GTA3_MODE, new GTA3HoverProvider(gta3ctx, sighelp)));
 
-	context.subscriptions.push(vscode.commands.registerCommand('gta3script.build.build', () => {
-		build();
-	}));
+    context.subscriptions.push(vscode.commands.registerCommand('gta3script.build.build', () => {
+        build().catch(_ => _);
+    }));
 }
 
 export function deactivate() {
 }
 
-function build(): Promise<any>
+function build(): Promise<void>
 {
     let mapTypeToSeverity = type => {
         switch(type) {
@@ -69,9 +69,45 @@ function build(): Promise<any>
     let filename = editor.document.uri.fsPath;
 
     return invokeCompiler(wsconfig, filename, cfgname).then(diags => {
+        let anyError = false;
         diagnosticCollection.clear();
-        for(let diag in diags) {
 
+        let diagnosticMap: Map<string, vscode.Diagnostic[]> = new Map();
+
+        for(let diag of diags) {
+            let severity = mapTypeToSeverity(diag.type);
+            anyError = anyError || (severity == vscode.DiagnosticSeverity.Error);
+
+            if(!diag.file) {
+                if(severity == vscode.DiagnosticSeverity.Error)
+                    vscode.window.showErrorMessage("GTA3script: " + diag.message);
+                else
+                    vscode.window.showInformationMessage("GTA3script: " + diag.message);
+                continue;
+            }
+
+            let canonicalFile = vscode.Uri.file(diag.file).toString();
+            let lineno = diag.line || 1;
+            let colno  = diag.column || 1;
+            let length = diag.length || 1;
+
+            let range = new vscode.Range(lineno-1, colno-1, lineno-1, colno+length-1);
+            let diagnostic = new vscode.Diagnostic(range, diag.message.split('\n')[0], severity);
+
+            let diagnostics = diagnosticMap.get(canonicalFile);
+            if (!diagnostics) {
+                diagnostics = [];
+            }
+            diagnostics.push(diagnostic);
+            diagnosticMap.set(canonicalFile, diagnostics);
+        }
+
+		diagnosticMap.forEach((diags, file) => {
+			diagnosticCollection.set(vscode.Uri.parse(file), diags);
+		});
+
+        if(anyError) {
+            return Promise.reject("Compilation failed.")
         }
     });
 }

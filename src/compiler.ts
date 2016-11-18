@@ -13,12 +13,14 @@ import * as cp from 'child_process';
 //  + Those named `invokeSomething` behaves like `requireSomething`.
 //
 
-interface CompilerResult {
+export interface CompilerResult {
     file: string | null,
-    line: number | null,
-    column: number | null,
     type: string | null,
+    line: number,           // 0 means no information
+    column: number,         // 0 means no information
+    length: number,         // 0 means no information
     message: string,
+    helper: string | null,
 }
 
 export function invokeCompiler(wsconfig: vscode.WorkspaceConfiguration,
@@ -28,7 +30,7 @@ export function invokeCompiler(wsconfig: vscode.WorkspaceConfiguration,
 
     return requireCompilerPath(wsconfig).then(gta3sc => {
         return new Promise((resolve, reject) => {
-            let args = pushDataDirToArgs(wsconfig, cfgname, ["compile", filename, `--config=${cfgname}`]);
+            let args = pushDataDirToArgs(wsconfig, cfgname, ["compile", filename, `--config=${cfgname}`, "--error-format=json"]);
             let buildflags = wsconfig.get(`buildflags.${cfgname}`, [])
             cp.execFile(gta3sc, args.concat(buildflags), (err, stdout, stderr) => {
                 if(err != null && (<any>err).code === 'ENOENT') {
@@ -37,28 +39,31 @@ export function invokeCompiler(wsconfig: vscode.WorkspaceConfiguration,
                 }
 
                 let results = new Array<CompilerResult>();
-                let regex = /^((?:\w:[\\/])?[^:]+):(?:(\d+):)?(?:(\d+):)?(?: (error|warning|note|fatal error):)? (.*)$/;
 
 				for(let pipeLine of stderr.split(/\r?\n/g)) {
 
-                    console.log(pipeLine);
-                    outputChannel.appendLine(pipeLine);
-
-					if(pipeLine[0] === ' ' || pipeLine[0] === '\t' && results.length > 0) {
-						results[results.length - 1].message += '\n' + pipeLine;
-						continue;
-					}
-
-					let match = regex.exec(pipeLine);
-					if(match) {
-                        let [file, lineno, colno, type, message] = match;
-                        results.push({
-                            file: file == "gta3sc"? null : path.resolve(cwd, file),
-                            line: lineno? +lineno : null,
-                            column: colno? +colno : null,
-                            type: type || null,
-                            message: message,
-                        });
+                    if(pipeLine[0] == '{') { // JSON
+                        let json = JSON.parse(pipeLine);
+                        results.push(json);
+                        let file = json.file || "gta3script";
+                        let type = json.type || "error";
+                        outputChannel.appendLine(`${file}:${json.line}:${json.column}:${json.length}: ${type}: ${json.message}`);
+                        if(json.helper) outputChannel.appendLine(json.helper);
+                    } else {
+                        let match = /^([^:]+):(?: ([^:]+:))? (.*)$/.exec(pipeLine);
+                        if(match) {
+                            let [_, __cc, type, message] = match;
+                            results.push({
+                                file: null,
+                                type: type || null,
+                                line: 0,
+                                column: 0,
+                                length: 0,
+                                message: message,
+                                helper: null,
+                            });
+                        }
+                        outputChannel.appendLine(pipeLine);
                     }
 				}
                 
