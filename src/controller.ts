@@ -1,6 +1,7 @@
 'use strict';
 import {GTA3DocumentationProvider, GameDoc, CommandDoc} from './documentation/interface'
 import {GTA3DocumentationController} from './documentation/controller'
+import {queryConfigPath, queryModels} from './compiler';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 const xml2js = require('xml2js');
@@ -34,10 +35,15 @@ export interface EnumerationDictionary {
     [enumName: string]: Array<[string, number]>;
 }
 
-interface ConfigData {
+export interface ConfigData {
     commands: CommandsDictionary,
     alternators: AlternatorsDictionary,
     enums: EnumerationDictionary,
+}
+
+export interface ModelsData {
+    default: Array<[string, number]>,
+    level: Array<[string, number]>,
 }
 
 export class GTA3ScriptController {
@@ -48,6 +54,7 @@ export class GTA3ScriptController {
     private commandsById: {};
     private alternators: {};
     private enums: {};
+    private models: ModelsData;
 
     constructor(private docs: GTA3DocumentationController) {
         this.configToken = 0;
@@ -56,6 +63,7 @@ export class GTA3ScriptController {
         this.commandsById = [];
         this.alternators = {};
         this.enums = {};
+        this.models = { default: [], level: [] };
     }
 
     /// Whenever the loaded configuration changes, this token changes as well.
@@ -81,7 +89,14 @@ export class GTA3ScriptController {
 
     /// Gets a specific constant list.
     public getEnumeration(name: string) : Array<[string, number]> {
-        return this.enums[name];
+        if(name == "CARPEDMODEL") {
+            return this.models.default;
+        } else if(name == "MODEL") {
+            // TODO FIXME this doesn't look very efficient.
+            return this.models.default.concat(this.models.level);
+        } else {
+            return this.enums[name];
+        }
     }
 
     /// Gets documentation for the specified command.
@@ -104,18 +119,27 @@ export class GTA3ScriptController {
     }
 
     /// Loads the specified configuration name.
-    public loadConfig(configname: string): Thenable<any> {
-        return this.loadConfigPath("C:/Projects/source/gta3script/config/" + configname)
-            .then((config) => {
-                this.config = configname;
-                this.commands = config.commands;
-                this.alternators = config.alternators;
-                this.enums = config.enums;
-                this.computeByIdTable();
-                ++this.configToken;
-            }).catch((err) => {
-                console.log(`Failed to load config at ${configname}`, err);
-            });
+    public loadConfig(cfgname: string): Thenable<any> {
+        let wsconfig = vscode.workspace.getConfiguration("gta3script");
+        return queryConfigPath(wsconfig).then(configpath => {
+            return this.loadConfigPath(`${configpath}/${cfgname}`).then(config => {
+                return queryModels(wsconfig, cfgname).catch(e => {
+                    // ignore failure of model querying
+                    return Promise.resolve({ default: [], level: [] });
+                }).then(models => {
+                    this.config = cfgname;
+                    this.commands = config.commands;
+                    this.alternators = config.alternators;
+                    this.enums = config.enums;
+                    this.models = models;
+                    this.computeByIdTable();
+                    ++this.configToken;
+                    console.log(`Loaded configuration ${cfgname}`);
+                });
+            })
+        }).catch(err => {
+            console.log(`Failed to load config at ${cfgname}; Reason: ${err}`);
+        });
     }
 
     private loadConfigPath(configpath: string): Promise<ConfigData> {
@@ -251,5 +275,4 @@ export class GTA3ScriptController {
             }
         }
     }
-
 }

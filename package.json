@@ -21,7 +21,6 @@
     ],
     "main": "./out/src/extension",
     "contributes": {
-        "commands": [],
         "languages": [
             {
                 "id": "gta3script",
@@ -40,7 +39,61 @@
                 "scopeName": "source.gta3script",
                 "path": "./syntaxes/gta3script.tmLanguage"
             }
-        ]
+        ],
+        "commands": [
+            {
+                "command": "gta3script.build.build",
+                "title": "GTA3Script: Build",
+                "description": "Builds the current script or current workspace."
+            }
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "GTA3script configuration",
+            "properties": {
+                "gta3script.compiler": {
+                    "type": ["string", "null"],
+                    "default": null,
+                    "description": "Specifies the path to the script compiler."
+                },
+                "gta3script.configpath": {
+                    "type": ["string", "null"],
+                    "default": null,
+                    "description": "Specifies the path to the script configuration. If not set, this path will be queried from the compiler."
+                },
+                "gta3script.buildflags": {
+                    "type": "object",
+                    "default": {
+                        "gta3": [],
+                        "gtavc": [],
+                        "gtasa": ["--guesser"]
+                    },
+                    "description": "Specifies build flags to be sent to the compiler for each configuration type."
+                },
+                "gta3script.gamebin": {
+                    "type": "object",
+                    "default": {
+                        "gta3": [null],
+                        "gtavc": [null],
+                        "gtasa": [null]
+                    },
+                    "description": "Specifies the executable of the game for each configuration type."
+                },
+                "gta3script.docprovider": {
+                    "type": "array",
+                    "item": {
+                        "type": "string"
+                    },
+                    "default": ["GTAModding", "GTAG Opcode Database"],
+                    "description": "Which providers, in which order, to use when querying documentation."
+                },
+                "gta3script.config": {
+                    "type": "string",
+                    "default": "gtasa",
+                    "description": "Which game configuration to work with."
+                }
+            }
+        }
     },
     "scripts": {
         "vscode:prepublish": "tsc -p ./",
