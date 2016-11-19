@@ -1,6 +1,7 @@
 'use strict';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as cp from 'child_process';
 import { GTA3ScriptController } from './controller';
 import { GTA3CompletionItemProvider } from './providers/completion';
 import { GTA3SignatureHelpProvider } from './providers/signature';
@@ -39,13 +40,42 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(vscode.languages.registerCompletionItemProvider(GTA3_MODE, new GTA3CompletionItemProvider(gta3ctx, sighelp), '.'));////////////////////////////////////////////////
     context.subscriptions.push(vscode.languages.registerHoverProvider(GTA3_MODE, new GTA3HoverProvider(gta3ctx, sighelp)));
 
-    context.subscriptions.push(vscode.commands.registerCommand('gta3script.build.build', () => {
+    context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.build', () => {
         build();
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.buildrun', () => {
+        build().then(() => rungame());
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.run', () => {
+        rungame();
     }));
 }
 
 export function deactivate()
 {
+}
+
+function rungame(): Thenable<void> {
+
+    let wsconfig = vscode.workspace.getConfiguration("gta3script");
+    let cfgname = wsconfig.get<string>("config");
+
+    let gamebin = wsconfig.get<string[]>(`gamebin.${cfgname}`, [null]);
+    if(!gamebin || !gamebin.length || !gamebin[0]) {
+        vscode.window.showInformationMessage("Cannot find the game executable, please configure the extension appropriately.");
+        return Promise.reject(null);
+    }
+
+    // spawn dettached process.
+    cp.spawn(gamebin[0], gamebin.slice(1), {
+        detached: true,
+        stdio: 'ignore',
+        cwd: gamebin[0].split(/\\|\//g).slice(0,-1).join('/'),
+    }).unref();
+
+    return Promise.resolve(null);
 }
 
 function build(): Thenable<void>
@@ -61,7 +91,7 @@ function build(): Thenable<void>
             vscode.window.showInformationMessage("Current file is not a GTA3script file.");
             return Promise.reject(null);
         }
-        return buildFile(wsconfig, cfgname, editor.document.uri.fsPath).catch(() => {});
+        return buildFile(wsconfig, cfgname, editor.document.uri.fsPath);
     }
 
     return vscode.workspace.findFiles("*.sc", "").then(uris => {
@@ -69,7 +99,7 @@ function build(): Thenable<void>
         uris.map(uri => uri.fsPath).forEach(file => { // build one after the other
             promise = promise.then(() => buildFile(wsconfig, cfgname, file));
         });
-        return promise.catch(() => {}); // avoid unhandled broken promises on debugging
+        return promise;
     });
 }
 

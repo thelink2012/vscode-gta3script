@@ -42,9 +42,19 @@
         ],
         "commands": [
             {
-                "command": "gta3script.build.build",
+                "command": "gta3script.cmd.build",
                 "title": "GTA3Script: Build",
                 "description": "Builds the current script or current workspace."
+            },
+            {
+                "command": "gta3script.cmd.buildrun",
+                "title": "GTA3Script: Build and Run Game",
+                "description": "Builds the current script or current workspace and runs the game."
+            },
+            {
+                "command": "gta3script.cmd.run",
+                "title": "GTA3Script: Run Game",
+                "description": "Runs the game."
             }
         ],
         "configuration": {
