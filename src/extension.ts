@@ -7,6 +7,7 @@ import { GTA3CompletionItemProvider } from './providers/completion';
 import { GTA3SignatureHelpProvider } from './providers/signature';
 import { GTA3HoverProvider } from './providers/hover';
 import { invokeCompiler } from './compiler';
+import { getFlagsStates, toggleFlag, getFlagnameByLabel, buildFlagsTable } from './buildflags';
 
 const GTA3_MODE: vscode.DocumentFilter = { language: 'gta3script', scheme: 'file' };
 
@@ -30,15 +31,20 @@ export function activate(context: vscode.ExtensionContext)
 
     let docController = new GTA3DocumentationController(docProviders);
     let gta3ctx = new GTA3ScriptController(docController);
-    gta3ctx.loadConfig(wsconfig.get<string>("config"));
 
     diagnosticCollection = vscode.languages.createDiagnosticCollection('gta3script');
     context.subscriptions.push(diagnosticCollection);
 
     let sighelp = new GTA3SignatureHelpProvider(gta3ctx);
     context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(GTA3_MODE, sighelp, '(', ',', ' '));
-    context.subscriptions.push(vscode.languages.registerCompletionItemProvider(GTA3_MODE, new GTA3CompletionItemProvider(gta3ctx, sighelp), '.'));////////////////////////////////////////////////
+    context.subscriptions.push(vscode.languages.registerCompletionItemProvider(GTA3_MODE, new GTA3CompletionItemProvider(gta3ctx, sighelp)));
     context.subscriptions.push(vscode.languages.registerHoverProvider(GTA3_MODE, new GTA3HoverProvider(gta3ctx, sighelp)));
+
+    let gameStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, -5);
+    gameStatusBar.command = "gta3script.cmd.selectgame";
+    gameStatusBar.tooltip = "Which game to compile for and work with";
+    gameStatusBar.show();
+    context.subscriptions.push(gameStatusBar);
 
     context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.build', () => {
         build();
@@ -51,11 +57,66 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.run', () => {
         rungame();
     }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.selectgame', () => {
+        let games = Object.keys(wsconfig.get("buildflags")).map(v => v.toUpperCase());
+        vscode.window.showQuickPick(games).then(selection => {
+            if(selection) {
+                (<any>wsconfig).update("config", selection.toLowerCase(), true);
+            }
+        });
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.buildflags', () => {
+        let config = wsconfig.get<string>("config");
+        let setflags = wsconfig.get<string[]>(`buildflags.${config}`, []);
+        let flagstates = getFlagsStates(setflags);
+        let table = buildFlagsTable();
+        let labels = [];
+        for(let flagname in flagstates) {
+            let switchTo = flagstates[flagname]? "Disable" : "Enable";
+            labels.push(`${switchTo} ${table[flagname].label}`);
+        }
+        vscode.window.showQuickPick(labels).then(selection => {
+            if(selection) {
+                let flagname = getFlagnameByLabel(selection);
+                setflags = toggleFlag(setflags, flagname);
+                let fullconfig = wsconfig.get("buildflags", {});
+                fullconfig[config] = setflags;
+                (<any>wsconfig).update(`buildflags`, fullconfig, false);
+            }
+        });
+    }));
+
+    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
+        if(!editor || !vscode.languages.match(GTA3_MODE, editor.document))
+            gameStatusBar.hide();
+        else
+            gameStatusBar.show();
+    }));
+
+    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(() => {
+        return updateConfig(gta3ctx, gameStatusBar);
+    }));
+
+    updateConfig(gta3ctx, gameStatusBar);
 }
 
 export function deactivate()
 {
 }
+
+function updateConfig(gta3ctx: GTA3ScriptController, gameStatusBar: vscode.StatusBarItem) {
+    let wsconfig = vscode.workspace.getConfiguration("gta3script");
+    let configSetting = wsconfig.get<string>("config");
+
+    if(gta3ctx.getConfigName() !== configSetting) {
+        gta3ctx.loadConfig(configSetting);
+    }
+
+    gameStatusBar.text = configSetting.toUpperCase();
+}
+
 
 function rungame(): Thenable<void> {
 

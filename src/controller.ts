@@ -66,6 +66,11 @@ export class GTA3ScriptController {
         this.models = { default: [], level: [] };
     }
 
+    /// Gets the current configuration name.
+    public getConfigName(): string | null {
+        return this.config;
+    }
+
     /// Whenever the loaded configuration changes, this token changes as well.
     /// This token is never a negative number.
     public getConfigToken(): number {

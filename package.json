@@ -17,7 +17,11 @@
         "Snippets"
     ],
     "activationEvents": [
-        "onLanguage:gta3script"
+        "onLanguage:gta3script",
+        "onCommand:gta3script.cmd.build",
+        "onCommand:gta3script.cmd.buildrun",
+        "onCommand:gta3script.cmd.run",
+        "onCommand:gta3script.cmd.selectgame"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -55,6 +59,16 @@
                 "command": "gta3script.cmd.run",
                 "title": "GTA3Script: Run Game",
                 "description": "Runs the game."
+            },
+            {
+                "command": "gta3script.cmd.selectgame",
+                "title": "GTA3Script: Select Game",
+                "description": "Selects the game configuration to use."
+            },
+            {
+                "command": "gta3script.cmd.buildflags",
+                "title": "GTA3Script: Build Flags",
+                "description": "Configure compilation flags."
             }
         ],
         "configuration": {
@@ -95,7 +109,7 @@
                         "type": "string"
                     },
                     "default": ["GTAModding", "GTAG Opcode Database"],
-                    "description": "Which providers, in which order, to use when querying documentation."
+                    "description": "Which providers, in which order, to use when querying documentation. Changing requires to restart VSCode."
                 },
                 "gta3script.config": {
                     "type": "string",
