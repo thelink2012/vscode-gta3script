@@ -21,7 +21,8 @@
         "onCommand:gta3script.cmd.build",
         "onCommand:gta3script.cmd.buildrun",
         "onCommand:gta3script.cmd.run",
-        "onCommand:gta3script.cmd.selectgame"
+        "onCommand:gta3script.cmd.selectgame",
+        "onCommand:gta3script.cmd.buildflags"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -69,6 +70,20 @@
                 "command": "gta3script.cmd.buildflags",
                 "title": "GTA3Script: Build Flags",
                 "description": "Configure compilation flags."
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "gta3script.cmd.build",
+                "key": "f6"
+            },
+            {
+                "command": "gta3script.cmd.buildrun",
+                "key": "f7"
+            },
+            {
+                "command": "gta3script.cmd.run",
+                "key": "ctrl+f7"
             }
         ],
         "configuration": {

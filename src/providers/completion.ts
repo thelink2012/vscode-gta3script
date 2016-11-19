@@ -20,7 +20,7 @@ export class GTA3CompletionItemProvider implements vscode.CompletionItemProvider
         let lineTillCurrentPosition = document.getText(new vscode.Range(position.line, 0, position.line, position.character));
 
         // Check if in the middle of typing a command name.
-        let typingCommand = lineTillCurrentPosition.match(/^\s*(?:\w+:\s*)?(?:IF\s+|WHILE\s+|IFNOT\s+|WHILENOT\s+)?(?:AND\s+|OR\s+)?(?:NOT\s+)?([_\w]+)$/i);
+        let typingCommand = lineTillCurrentPosition.match(/^\s*(?:\w+:\s*)?(?:IF\s+|WHILE\s+|IFNOT\s+|WHILENOT\s+)?(?:AND\s+|OR\s+)?(?:NOT\s+)?([_\w]*)$/i);
         if(typingCommand) {
             return this.getCommandCompletions();
         }

@@ -10,59 +10,55 @@ interface BuildFlag {
     /// Small text to be used in "Enable <LABEL>" or "Disable <LABEL>" contexts.
     label: string,
 
-    /// Explanation of the flag.
+    /// Explanation of the flag (currently unused).
     explain: string,
 }
 
-// TODO put this outside the function?
-export function buildFlagsTable() {
-    return {
-        "--cs": {
-            type: "tautology",
-            label: "Building of Custom Script (.cs)",
-            explain: "",
-        },
-        "--cm": {
-            type: "tautology",
-            label: "Building of Custom Mission (.cm)",
-            explain: "",
-        },
-        "-pedantic": {
-            type: "tautology",
-            label: "Strictness",
-            explain: "",
-        },
-        "-O": {
-            type: "tautology",
-            label: "Optimization",
-            explain: "",
-        },
-        "-fno-entity-tracking": {
-            type: "bool",
-            label: "Entity Tracking",
-            explain: "",
-        },
-        "-fno-script-name-check": {
-            type: "bool",
-            label: "Script Name Check",
-            explain: "",
-        },
-        "-fcleo": {
-            type: "tautology",
-            label: "CLEO Features",
-            explain: "",
-        },
-    };
-}
+export const BUILD_FLAGS = {
+    "--cs": {
+        type: "tautology",
+        label: "Building of Custom Script (.cs)",
+        explain: "",
+    },
+    "--cm": {
+        type: "tautology",
+        label: "Building of Custom Mission (.cm)",
+        explain: "",
+    },
+    "-pedantic": {
+        type: "tautology",
+        label: "Strictness",
+        explain: "",
+    },
+    "-O": {
+        type: "tautology",
+        label: "Optimization",
+        explain: "",
+    },
+    "-fno-entity-tracking": {
+        type: "bool",
+        label: "Entity Tracking",
+        explain: "",
+    },
+    "-fno-script-name-check": {
+        type: "bool",
+        label: "Script Name Check",
+        explain: "",
+    },
+    "-fcleo": {
+        type: "tautology",
+        label: "CLEO Features (for main.scm)",
+        explain: "",
+    },
+};
 
-function getDefaultStates() 
+/// Gets the state of the flags when they aren't specified in the buildflags options.
+function getDefaultStates()
 {
-    let table = buildFlagsTable();
-
     let defaultStates = {};
 
-    for(let key in table) {
-        if(table.hasOwnProperty(key)) {
+    for(let key in BUILD_FLAGS) {
+        if(BUILD_FLAGS.hasOwnProperty(key)) {
             if(key.startsWith("-fno-") || key.startsWith("-mno-")) {
                 defaultStates[key] = true; // flag not present means it's switched on
             } else {
@@ -74,30 +70,27 @@ function getDefaultStates()
     return defaultStates;
 }
 
-export function getFlagsStates(flags: string[]): {} {
-    let table = buildFlagsTable();
+export function getFlagStates(flags: string[])
+{
     let defaultStates = getDefaultStates();
 
     let states = Object.assign({}, defaultStates);
-    for(let flag of flags) {
-        if(table[flag] != null) {
-            states[flag] = !defaultStates[flag];
+    for(let flagname of flags) {
+        if(BUILD_FLAGS[flagname] != undefined) {
+            states[flagname] = !defaultStates[flagname];
         }
     }
 
     return states;
 }
 
-export function getFlagnameByLabel(label: string): string | null
+export function getFlagNameByLabel(label: string): string | null
 {
-    let table = buildFlagsTable();
-
     label = /^(?:Enable\s+|Disable\s+)(.*)$/.exec(label)[1];
 
-    for(let key in table) {
-        if(table.hasOwnProperty(key)) {
-            let item = table[key];
-            if(item.label == label)
+    for(let key in BUILD_FLAGS) {
+        if(BUILD_FLAGS.hasOwnProperty(key)) {
+            if(BUILD_FLAGS[key].label == label)
                 return key;
         }
     }
@@ -113,6 +106,14 @@ export function toggleFlag(flags: string[], flagname: string): string[]
         result.splice(flagindex, 1);
         return result;
     } else {
+
+        // Few things that needs to be handled manually.
+        if(flagname == "--cm" && flags.indexOf("--cs") != -1) {
+            flags = toggleFlag(flags, "--cs");
+        } else if(flagname == "--cs" && flags.indexOf("--cm") != -1) {
+            flags = toggleFlag(flags, "--cm");
+        }
+
         return flags.concat([flagname]);
     }
 }
