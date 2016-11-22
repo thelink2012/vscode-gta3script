@@ -14,7 +14,8 @@
     },
     "categories": [
         "Languages",
-        "Snippets"
+        "Snippets",
+        "Debuggers"
     ],
     "activationEvents": [
         "onLanguage:gta3script",
@@ -154,7 +155,50 @@
                     "description": "Which game configuration to work with."
                 }
             }
-        }
+        },
+        "breakpoints": [
+            {
+                "language": "gta3script"
+            }
+        ],
+        "debuggers": [
+            {
+                "type": "gta3script",
+                "label": "GTA3script Debugger",
+                "program": "./out/src/debugger/debugger.js",
+                "runtime": "node",
+				
+				"configurationSnippets": [
+					{
+						"label": "Mock Debug: Launch",
+						"description": "A new configuration for launching a mock debug program",
+						"body": {
+							"type": "gta3script",
+							"request": "launch",
+							"name": "{{2:Launch Program}}",
+							"program": "${workspaceRoot}/{{1:Program}}"
+						}
+					}
+				],
+				"configurationAttributes": {
+					"launch": {
+						"required": [ "program" ],
+						"properties": {
+							"program": {
+								"type": "string",
+								"description": "Absolute path to a text file.",
+								"default": "${workspaceRoot}/Nova Pasta/readme.md"
+							},
+							"stopOnEntry": {
+								"type": "boolean",
+								"description": "Automatically stop after launch.",
+								"default": true
+							}
+						}
+					}
+				}
+            }
+        ]
     },
     "scripts": {
         "vscode:prepublish": "tsc -p ./",
@@ -163,7 +207,9 @@
     },
     "dependencies": {
         "xml2js": "^0.4.17",
-        "cheerio": "^0.22.0"
+        "cheerio": "^0.22.0",
+        "vscode-debugprotocol": "^1.15.0-pre.1",
+        "vscode-debugadapter": "^1.15.0-pre.1"
     },
     "devDependencies": {
         "typescript": "^2.0.3",
