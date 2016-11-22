@@ -2,12 +2,12 @@
     "name": "gta3script",
     "displayName": "GTA3script",
     "description": "GTA3script support for VSCode",
-    "version": "0.0.1",
+    "version": "0.2.0",
     "publisher": "thelink2012",
     "license": "MIT",
     "repository": {
-        "type" : "git",
-        "url" : "https://github.com/thelink2012/vscode-gta3script.git"
+        "type": "git",
+        "url": "https://github.com/thelink2012/vscode-gta3script.git"
     },
     "engines": {
         "vscode": "^1.5.0"
@@ -91,30 +91,49 @@
             "title": "GTA3script configuration",
             "properties": {
                 "gta3script.compiler": {
-                    "type": ["string", "null"],
+                    "type": [
+                        "string",
+                        "null"
+                    ],
                     "default": null,
                     "description": "Specifies the path to the script compiler."
                 },
                 "gta3script.configpath": {
-                    "type": ["string", "null"],
+                    "type": [
+                        "string",
+                        "null"
+                    ],
                     "default": null,
                     "description": "Specifies the path to the script configuration. If not set, this path will be queried from the compiler."
                 },
                 "gta3script.buildflags": {
                     "type": "object",
                     "default": {
-                        "gta3": ["--cs"],
-                        "gtavc": ["--cs"],
-                        "gtasa": ["--guesser", "--cs"]
+                        "gta3": [
+                            "--cs"
+                        ],
+                        "gtavc": [
+                            "--cs"
+                        ],
+                        "gtasa": [
+                            "--guesser",
+                            "--cs"
+                        ]
                     },
                     "description": "Specifies build flags to be sent to the compiler for each configuration type."
                 },
                 "gta3script.gamebin": {
                     "type": "object",
                     "default": {
-                        "gta3": [null],
-                        "gtavc": [null],
-                        "gtasa": [null]
+                        "gta3": [
+                            null
+                        ],
+                        "gtavc": [
+                            null
+                        ],
+                        "gtasa": [
+                            null
+                        ]
                     },
                     "description": "Specifies the executable of the game for each configuration type."
                 },
@@ -123,7 +142,10 @@
                     "item": {
                         "type": "string"
                     },
-                    "default": ["GTAModding", "GTAG Opcode Database"],
+                    "default": [
+                        "GTAModding",
+                        "GTAG Opcode Database"
+                    ],
                     "description": "Which providers, in which order, to use when querying documentation. Changing requires to restart VSCode."
                 },
                 "gta3script.config": {
@@ -140,7 +162,8 @@
         "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "dependencies": {
-        "xml2js": "^0.4.17"
+        "xml2js": "^0.4.17",
+        "cheerio": "^0.22.0"
     },
     "devDependencies": {
         "typescript": "^2.0.3",
