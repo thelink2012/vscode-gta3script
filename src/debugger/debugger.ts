@@ -13,6 +13,202 @@ import {
 import {DebugProtocol} from 'vscode-debugprotocol';
 import {readFileSync} from 'fs';
 import {basename} from 'path';
+import * as net from 'net';
+
+const ATTACH_TIMEOUT = 10000;
+const REQUEST_TIMEOUT = 5000;
+const HANDSHAKE_TIMEOUT = 3000;
+
+interface GTA3DebugClientConnection
+{
+	onDisconnect: any,
+}
+
+class GTA3DebugClient
+{
+	private socket: net.Socket;
+	private handshaked: boolean;
+	private currentSequenceId: number;
+	private responseHandlers: {};
+
+	constructor() {
+		this.socket = null;
+	}
+
+	public detach()
+	{
+		if(this.socket) {
+			this.socket.destroy();
+			this.socket = null;
+		}
+	}
+
+	public attach(host: string, port: number, timeout: number): Promise<GTA3DebugClientConnection>
+	{
+		if(this.socket != null)
+			return Promise.reject("there's a gta3debug connection already open");
+
+		let connected = false;
+		let dataBuffer = "";
+		let socket = new net.Socket();
+
+		// initialise
+		this.currentSequenceId = 0;
+		this.handshaked = false;
+		this.responseHandlers = {};
+		this.socket = socket;
+
+		if(host == "localhost") {
+			host = "127.0.0.1";
+		}
+
+		if(!port) {
+			port = 58754;
+		}
+		
+		return new Promise((resolve, reject) => {
+			let connectionHandle: GTA3DebugClientConnection = {
+				onDisconnect: null,
+			}
+
+			let onTerminate = (reason) => {
+				this.detach();
+				
+				if(connected) {
+					if(connectionHandle.onDisconnect) {
+						connectionHandle.onDisconnect();
+					}
+				} else {
+					reject(reason || "no reason");
+				}
+			};
+
+			let onFatalError = (reason) => {
+				onTerminate(reason);
+			};
+
+			console.log("UU");
+			socket.connect(port, host, () => {
+				connected = true;
+				this.request('capabilities_get', {}).then((json) => {
+					this.handshaked = true;
+					resolve(connectionHandle);
+				}).catch(e => {
+					onFatalError(e);
+				});
+			});
+
+			socket.on('data', (data) => {
+				try {
+					let string = data.toString('utf8');
+					let currentIndex = 0;
+					for(let currentIndex = 0; currentIndex < string.length; ) {
+						let nextNull = string.indexOf('\0', currentIndex);
+						if(nextNull == -1) {
+							dataBuffer += string.slice(currentIndex);
+							currentIndex = string.length + 1;
+						} else {
+							dataBuffer += string.slice(currentIndex, nextNull);
+							// TODO what if not a json
+							this.handleMessage(JSON.parse(dataBuffer));
+							dataBuffer = "";
+							currentIndex = nextNull + 1;
+						}
+					}
+				} catch(e) {
+					if(e instanceof SyntaxError) // JSON.parse error
+						onFatalError(e.message);
+					else
+						throw e;
+				}
+			});
+
+			socket.on('end', () => {
+				onTerminate(null);
+			});
+
+			const endTime = new Date().getTime() + timeout;
+			socket.on('error', (err) => {
+				if(connected) {
+					onFatalError("socket error")
+				} else {
+					// we are not yet connected so retry a few times
+					if ((<any>err).code === 'ECONNREFUSED' || (<any>err).code === 'ECONNRESET') {
+						const now = new Date().getTime();
+						if (now < endTime)
+							setTimeout(() => socket.connect(port), 200); // retry after 200 ms
+						else
+							onFatalError("Connection timeout");
+					} else {
+						onFatalError(`Connection failed: ${err.message}`);
+					}
+				}
+			});
+		});
+	}
+
+	public request(command: string, args: Object): Promise<any> {
+		if(this.socket == null) {
+			return Promise.reject("no connection open");
+		}
+
+		let sequenceId = this.currentSequenceId;
+
+		this.socket.write(JSON.stringify({
+			"type": "request",
+			"id": sequenceId,
+			"command": command,
+			"arguments": args,
+		}) + '\0');
+
+		if(this.currentSequenceId >= 2147483647)
+			this.currentSequenceId = 0;
+		else
+			this.currentSequenceId++;
+
+		return new Promise((resolve, reject) => {
+			if(this.responseHandlers[sequenceId] !== undefined) {
+				return reject("sequenceId overlapping!");
+			}
+
+			let timer = setTimeout(() => {
+				delete this.responseHandlers[sequenceId];
+				reject("request timed out");
+			}, REQUEST_TIMEOUT)
+
+			this.responseHandlers[sequenceId] = (json) => {
+				clearTimeout(timer);
+				delete this.responseHandlers[sequenceId];
+				resolve(json);
+			};
+		});
+	}
+
+	private handleMessage(json: any) {
+		
+		console.log("Got object", json);
+
+		// ensure handshake is correct
+		if(!this.handshaked) {
+			if(json["type"] == "response" && "id" in json && "body" in json && "debugprotocol" in json["body"]) {
+				if("error" in json) {
+					// let timeout take care of erroing
+					return;
+				}
+			} else {
+				// let timeout take care of erroing
+				return;
+			}
+		}
+
+		if(json["type"] == "response") {
+			let handler = this.responseHandlers[json["id"]]
+			if(handler) handler(json);
+		} else if(json["type"] == "event") {
+			// TODO
+		}
+	}
+}
 
 
 /**
@@ -25,7 +221,16 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
 	stopOnEntry?: boolean;
 }
 
+export interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
+	/** An absolute path to the program to debug. */
+	program: string;
+	/** Automatically stop target after launch. If not specified, target does not stop. */
+	stopOnEntry?: boolean;
+}
+
 class MockDebugSession extends DebugSession {
+
+	private debugClient: GTA3DebugClient;
 
 	// we don't support multiple threads, so we can use a hardcoded ID for the default thread
 	private static THREAD_ID = 1;
@@ -63,6 +268,8 @@ class MockDebugSession extends DebugSession {
 	public constructor() {
 		super();
 
+		this.debugClient = new GTA3DebugClient();
+
 		// this debugger uses zero-based lines and columns
 		this.setDebuggerLinesStartAt1(false);
 		this.setDebuggerColumnsStartAt1(false);
@@ -74,25 +281,87 @@ class MockDebugSession extends DebugSession {
 	 */
 	protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
 
-		// since this debug adapter can accept configuration requests like 'setBreakpoint' at any time,
-		// we request them early by sending an 'initializeRequest' to the frontend.
-		// The frontend will end the configuration sequence by calling 'configurationDone' request.
-		this.sendEvent(new InitializedEvent());
-
 		// This debug adapter implements the configurationDoneRequest.
 		response.body.supportsConfigurationDoneRequest = true;
 
 		// make VS Code to use 'evaluate' when hovering over source
 		response.body.supportsEvaluateForHovers = true;
 
-		// make VS Code to show a 'step back' button
-		response.body.supportsStepBack = true;
-
 		this.sendResponse(response);
 	}
 
 	protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
+		// TODO
+	}
 
+	protected attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments): void
+	{
+		console.log("AA");
+		this.debugClient.attach('localhost', null, ATTACH_TIMEOUT).then((handle) => {
+			handle.onDisconnect = () => {
+				console.log("Disconnecting debugger...");
+				this.sendEvent(new TerminatedEvent());
+			};
+			console.log("Attached!");
+			//this.sendResponse(response);
+			this.sendEvent(new InitializedEvent());
+			this.beginDebugMock(response, args);
+		}).catch((e) => {
+			console.log(`Attach failed: ${e}`);
+			this.sendEvent(new TerminatedEvent());
+		});
+	}
+
+	/**
+	 * Overridden from DebugSession:
+	 * attach: disconnect
+	 * launch: kill
+	 */
+	public shutdown(): void {
+		this.debugClient.detach();
+		super.shutdown();
+	}
+
+
+	public request(command: string, args: Object): Thenable<any> {
+		return this.debugClient.request(command, args).catch((e) => {
+			// TODO
+			console.log(`request failed: ${e}`)
+		});
+	}
+
+	protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
+		this.request('script_list', {}).then(json => {
+			response.body = { threads: [] };
+			for(let item of json.body.scripts) {
+				response.body.threads.push(new Thread(item.script.id, item.script.name));
+			}
+			this.sendResponse(response);
+		});
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	protected beginDebugMock(response: DebugProtocol.AttachResponse, args: AttachRequestArguments) {
 		this._sourceFile = args.program;
 		this._sourceLines = readFileSync(this._sourceFile).toString().split('\n');
 
@@ -149,16 +418,7 @@ class MockDebugSession extends DebugSession {
 		this.sendResponse(response);
 	}
 
-	protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
 
-		// return the default thread
-		response.body = {
-			threads: [
-				new Thread(MockDebugSession.THREAD_ID, "thread 1")
-			]
-		};
-		this.sendResponse(response);
-	}
 
 	/**
 	 * Returns a fake 'stacktrace' where every 'stackframe' is a word from the current line.
@@ -249,19 +509,6 @@ class MockDebugSession extends DebugSession {
 		this.sendEvent(new TerminatedEvent());
 	}
 
-	protected reverseContinueRequest(response: DebugProtocol.ReverseContinueResponse, args: DebugProtocol.ReverseContinueArguments) : void {
-
-		for (var ln = this._currentLine-1; ln >= 0; ln--) {
-			if (this.fireEventsForLine(response, ln)) {
-				return;
-			}
-		}
-		this.sendResponse(response);
-		// no more lines: stop at first line
-		this._currentLine = 0;
-		this.sendEvent(new StoppedEvent("entry", MockDebugSession.THREAD_ID));
- 	}
-
 	protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
 
 		for (let ln = this._currentLine+1; ln < this._sourceLines.length; ln++) {
@@ -272,19 +519,6 @@ class MockDebugSession extends DebugSession {
 		this.sendResponse(response);
 		// no more lines: run to end
 		this.sendEvent(new TerminatedEvent());
-	}
-
-	protected stepBackRequest(response: DebugProtocol.StepBackResponse, args: DebugProtocol.StepBackArguments): void {
-
-		for (let ln = this._currentLine-1; ln >= 0; ln--) {
-			if (this.fireStepEvent(response, ln)) {
-				return;
-			}
-		}
-		this.sendResponse(response);
-		// no more lines: stop at first line
-		this._currentLine = 0;
-		this.sendEvent(new StoppedEvent("entry", MockDebugSession.THREAD_ID));
 	}
 
 	protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {

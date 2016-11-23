@@ -195,6 +195,21 @@
 								"default": true
 							}
 						}
+					},
+					"attach": {
+						"required": [ "program" ],
+						"properties": {
+							"program": {
+								"type": "string",
+								"description": "Absolute path to a text file.",
+								"default": "${workspaceRoot}/Nova Pasta/readme.md"
+							},
+							"stopOnEntry": {
+								"type": "boolean",
+								"description": "Automatically stop after launch.",
+								"default": true
+							}
+						}
 					}
 				}
             }
