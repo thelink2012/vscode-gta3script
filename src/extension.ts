@@ -60,15 +60,19 @@ export function activate(context: vscode.ExtensionContext)
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.build', () => {
-        build();
+        vscode.workspace.saveAll(false).then(() => {
+            build().catch(() => {})
+        });
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.buildrun', () => {
-        build().then(() => rungame());
+        vscode.workspace.saveAll(false).then(() => {
+            build().then(() => rungame()).catch(() => {});
+        });
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.run', () => {
-        rungame();
+        rungame().catch(() => {});
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.selectgame', () => {
@@ -134,7 +138,7 @@ function updateConfig(gta3ctx: GTA3ScriptController,
                           buildflags.indexOf("--cm") >= 0? "CM" : "MAIN";
 }
 
-function rungame(): Thenable<void> 
+function rungame(): Promise<void> 
 {
     let wsconfig = vscode.workspace.getConfiguration("gta3script");
     let cfgname = wsconfig.get<string>("config");
@@ -155,7 +159,7 @@ function rungame(): Thenable<void>
     return Promise.resolve(null);
 }
 
-function build(): Thenable<void>
+function build(): Promise<void>
 {
     let wsconfig = vscode.workspace.getConfiguration("gta3script");
     let cfgname = wsconfig.get<string>("config");
@@ -171,12 +175,14 @@ function build(): Thenable<void>
         return buildFile(wsconfig, cfgname, editor.document.uri.fsPath);
     }
 
-    return vscode.workspace.findFiles("*.sc", "").then(uris => {
-        let promise = Promise.resolve();
-        uris.map(uri => uri.fsPath).forEach(file => { // build one after the other
-            promise = promise.then(() => buildFile(wsconfig, cfgname, file));
+    return new Promise((resolve, reject) => {
+        vscode.workspace.findFiles("*.sc", "").then(uris => {
+            let promise = Promise.resolve();
+            uris.map(uri => uri.fsPath).forEach(file => { // build one after the other
+                promise = promise.then(() => buildFile(wsconfig, cfgname, file));
+            });
+            promise.then(_ => resolve(null)).catch(e => reject(e));
         });
-        return promise;
     });
 }
 
