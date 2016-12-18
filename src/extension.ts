@@ -21,9 +21,8 @@ export function activate(context: vscode.ExtensionContext)
 {
     console.log("gta3script extension being activated");
 
-    let wsconfig = vscode.workspace.getConfiguration("gta3script");
-
-    let docProviders = wsconfig.get<[string]>("docprovider").map(v => {
+    let docProviders = vscode.workspace.getConfiguration("gta3script")
+                                       .get<[string]>("docprovider").map(v => {
         if(v == "GTAModding") return new GTAModdingDocumentationProvider();
         if(v == "GTAG Opcode Database") return new GTAGDocumentationProvider();
         return null;
@@ -97,17 +96,20 @@ export function activate(context: vscode.ExtensionContext)
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.selectgame', () => {
+        let wsconfig = vscode.workspace.getConfiguration("gta3script");
         let games = Object.keys(wsconfig.get("buildflags")).map(v => v.toUpperCase());
         vscode.window.showQuickPick(games).then(selection => {
             if(selection) {
                 (<any>wsconfig).update("config", selection.toLowerCase(), true);
+                wsconfig = null // avoid accessing old config again
             }
         });
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.buildflags', () => {
-        let config = wsconfig.get<string>("config");
-        let setflags = wsconfig.get<string[]>(`buildflags.${config}`, []);
+        let wsconfig = vscode.workspace.getConfiguration("gta3script");
+        let game = wsconfig.get<string>("config");
+        let setflags = wsconfig.get<string[]>(`buildflags.${game}`, []);
         let flagstates = getFlagStates(setflags);
         let labels = [];
         for(let flagname in flagstates) {
@@ -119,8 +121,9 @@ export function activate(context: vscode.ExtensionContext)
                 let fullconfig = wsconfig.get("buildflags", {});
                 let flagname = getFlagNameByLabel(selection);
                 let global = (vscode.workspace.rootPath === undefined);
-                fullconfig[config] = toggleFlag(setflags, flagname);
+                fullconfig[game] = toggleFlag(setflags, flagname);
                 (<any>wsconfig).update("buildflags", fullconfig, global);
+                wsconfig = null // avoid accessing old config again
             }
         });
     }));
@@ -146,9 +149,9 @@ function updateConfig(gta3ctx: GTA3ScriptController,
                       gameStatusBar: vscode.StatusBarItem,
                       flagsStatusBar: vscode.StatusBarItem) 
 {
-    let wsconfig = vscode.workspace.getConfiguration("gta3script");
-    let configSetting = wsconfig.get<string>("config");
-    let buildflags = wsconfig.get<string[]>(`buildflags.${configSetting}`, []);
+    const wsconfig = vscode.workspace.getConfiguration("gta3script");
+    const configSetting = wsconfig.get<string>("config");
+    const buildflags = wsconfig.get<string[]>(`buildflags.${configSetting}`, []);
 
     if(gta3ctx.getConfigName() !== configSetting) {
         gta3ctx.loadConfig(configSetting);
@@ -161,10 +164,10 @@ function updateConfig(gta3ctx: GTA3ScriptController,
 
 function rungame(): Promise<void> 
 {
-    let wsconfig = vscode.workspace.getConfiguration("gta3script");
-    let cfgname = wsconfig.get<string>("config");
+    const wsconfig = vscode.workspace.getConfiguration("gta3script");
+    const cfgname = wsconfig.get<string>("config");
 
-    let gamebin = wsconfig.get<string[]>(`gamebin.${cfgname}`, [null]);
+    const gamebin = wsconfig.get<string[]>(`gamebin.${cfgname}`, [null]);
     if(!gamebin || !gamebin.length || !gamebin[0]) {
         vscode.window.showInformationMessage("Cannot find the game executable, please configure the extension appropriately.");
         return Promise.reject(null);
@@ -182,8 +185,8 @@ function rungame(): Promise<void>
 
 function build(): Promise<void>
 {
-    let wsconfig = vscode.workspace.getConfiguration("gta3script");
-    let cfgname = wsconfig.get<string>("config");
+    const wsconfig = vscode.workspace.getConfiguration("gta3script");
+    const cfgname = wsconfig.get<string>("config");
 
     diagnosticCollection.clear();
 
