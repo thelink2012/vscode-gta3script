@@ -1,4 +1,5 @@
 'use strict';
+import * as vscode from 'vscode';
 import {GTA3DocumentationProvider, GameDoc, CommandDoc} from './interface'
 import {GTA3ScriptController, Command} from '../controller'
 
@@ -20,17 +21,31 @@ interface CachedDocDictionary {
 }
 
 
-export class GTA3DocumentationController {
+export class GTA3DocumentationController /* implements IDisposable */ {
 
     private docs: GTA3DocumentationProvider[];
     private cachedDocs: CachedDocDictionary;
+    private isCacheDirty: boolean;
+    private cacheTimer: NodeJS.Timer;
 
-    constructor(providers: GTA3DocumentationProvider[]) {
+    constructor(providers: GTA3DocumentationProvider[],
+                private globalStorage: vscode.Memento) {
         this.docs = providers;
-        this.cachedDocs = {};
-        for(let provider of this.docs) {
-            this.cachedDocs[provider.getProviderName()] = {}
-        }
+
+        this.clearCache();
+        this.loadCache();
+
+        const MINUTES_TO_SAVE_CACHE = 1;
+        this.cacheTimer = setInterval(() => {
+            if(this.isCacheDirty) {
+                this.saveCache();
+            }
+        }, 1000*60*MINUTES_TO_SAVE_CACHE);
+    }
+
+    public dispose(): any {
+        clearInterval(this.cacheTimer);
+        // calling saveCache() on dispose() does nothing sadly
     }
 
     public getPlainTextGameSpec(games: GameDoc[]): string {
@@ -52,12 +67,30 @@ export class GTA3DocumentationController {
         return result;
     }
 
-    public loadCache() {
-        // TODO
+    public clearCache() {
+        console.log("Clearing documentation cache...");
+        this.isCacheDirty = true;
+        this.cachedDocs = {};
+        for(let provider of this.docs) {
+            this.cachedDocs[provider.getProviderName()] = {}
+        }
+    }
+
+    private loadCache() {
+        console.log("Loading documentation cache...");
+        this.isCacheDirty = false;
+        let stored = this.globalStorage.get<CachedDocDictionary>('docs', {})
+        for(let provider in stored) {
+            if(stored.hasOwnProperty(provider) && this.cachedDocs.hasOwnProperty(provider)) {
+                this.cachedDocs[provider] = stored[provider];
+            }
+        }
     }
 
     public saveCache() {
-        // TODO
+        console.log("Saving documentation cache...");
+        this.isCacheDirty = false;
+        this.globalStorage.update('docs', this.cachedDocs);
     }
 
     /// Gets documentation for the specified command.
@@ -165,6 +198,7 @@ export class GTA3DocumentationController {
         else
             console.log(`Caching that command ${command.name} does not exist in ${providerName}`);
 
+        this.isCacheDirty = true;
         this.cachedDocs[providerName][command.name] = {
                 version: 1,
                 timestamp: Math.floor((new Date).getTime() / 1000),

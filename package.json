@@ -70,6 +70,11 @@
                 "command": "gta3script.cmd.buildflags",
                 "title": "GTA3Script: Build Flags",
                 "description": "Configure compilation flags."
+            },
+            {
+                "command": "gta3script.cmd.cleardocs",
+                "title": "GTA3Script: Clear Documentation Cache",
+                "description": "Clears the documentation cache"
             }
         ],
         "keybindings": [

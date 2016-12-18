@@ -29,7 +29,9 @@ export function activate(context: vscode.ExtensionContext)
         return null;
     }).filter(v => v != null);
 
-    let docController = new GTA3DocumentationController(docProviders);
+    let docController = new GTA3DocumentationController(docProviders, context.globalState);
+    context.subscriptions.push(docController);
+
     let gta3ctx = new GTA3ScriptController(docController);
 
     diagnosticCollection = vscode.languages.createDiagnosticCollection('gta3script');
@@ -51,6 +53,11 @@ export function activate(context: vscode.ExtensionContext)
     flagsStatusBar.tooltip = "Build flags";
     flagsStatusBar.show();
     context.subscriptions.push(flagsStatusBar);
+
+    context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.cleardocs', () => {
+        docController.clearCache();
+        docController.saveCache();
+    }));
 
     context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.build', () => {
         build();
@@ -108,10 +115,6 @@ export function activate(context: vscode.ExtensionContext)
     }));
 
     updateConfig(gta3ctx, gameStatusBar, flagsStatusBar);
-}
-
-export function deactivate()
-{
 }
 
 function updateConfig(gta3ctx: GTA3ScriptController,
