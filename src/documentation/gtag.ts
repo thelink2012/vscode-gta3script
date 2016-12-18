@@ -2,6 +2,7 @@
 import {GTA3DocumentationProvider, docrequest, CommandDoc, GameDoc, ArgumentDoc} from './interface';
 import {GTA3ScriptController, Command} from '../controller';
 const cheerio = require('cheerio')
+const toMarkdown = require('to-markdown');
 
 export class GTAGDocumentationProvider implements GTA3DocumentationProvider {
     public getProviderName(): string {
@@ -32,7 +33,7 @@ export class GTAGDocumentationProvider implements GTA3DocumentationProvider {
                 if(i == 0) { // Description
                     let elemHtml = $(elem).html();
                     if(elemHtml) {
-                        result.shortDescription = $(`<span>${elemHtml.split(/\.|<br>/)[0]}</span>`).text()
+                        result.shortDescription = $(`<span>${elemHtml.split(/<br>/)[0]}</span>`).text().split('.')[0]
                         result.longDescription = this.htmlToMarkdown(elemHtml);
                     }
                 } else if(i == 1) { // Parameters
@@ -57,6 +58,7 @@ export class GTAGDocumentationProvider implements GTA3DocumentationProvider {
     }
 
     private htmlToMarkdown(html: string): string {
-        return html.replace(/<br>/g, "\n");;
+        return toMarkdown(html).replace(/<div[^>]*>([^<]*)<\/div>/g, "$1")
+                               .replace(/<span[^>]*>([^<]*)<\/span>/g, "$1");
     }
 }

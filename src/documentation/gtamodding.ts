@@ -93,6 +93,10 @@ export class GTAModdingDocumentationProvider implements GTA3DocumentationProvide
                 result.longDescription = result.shortDescription;
             }
 
+            if(!result.shortDescription) {
+                return Promise.resolve(null);
+            }
+
             return result;
         });
     }
