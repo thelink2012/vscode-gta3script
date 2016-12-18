@@ -54,6 +54,25 @@ export function activate(context: vscode.ExtensionContext)
     flagsStatusBar.show();
     context.subscriptions.push(flagsStatusBar);
 
+    let buildingBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, Number.MIN_VALUE + 0);
+    buildingBar.hide();
+    context.subscriptions.push(buildingBar);
+    
+    const startBuildingBar = (): NodeJS.Timer => {
+        const spinning = "|/-\\";
+        let currentSpin = 0;
+        buildingBar.text = spinning[currentSpin++];
+        buildingBar.show();
+        return setInterval(() => {
+            buildingBar.text = spinning[currentSpin++ % spinning.length];
+        }, 50);
+    };
+
+    const stopBuildingBar = (timer: NodeJS.Timer) => {
+        clearInterval(timer);
+        buildingBar.hide();
+    };
+
     context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.cleardocs', () => {
         docController.clearCache();
         docController.saveCache();
@@ -61,13 +80,15 @@ export function activate(context: vscode.ExtensionContext)
 
     context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.build', () => {
         vscode.workspace.saveAll(false).then(() => {
-            build().catch(() => {})
+            let timer = startBuildingBar();
+            build().catch(_ => {}).then(_ => stopBuildingBar(timer))
         });
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand('gta3script.cmd.buildrun', () => {
         vscode.workspace.saveAll(false).then(() => {
-            build().then(() => rungame()).catch(() => {});
+            let timer = startBuildingBar();
+            build().then(() => rungame()).catch(_ => {}).then(_ => stopBuildingBar(timer))
         });
     }));
 
@@ -212,6 +233,8 @@ function buildFile(wsconfig: vscode.WorkspaceConfiguration,
             if(!diag.file) {
                 if(severity == vscode.DiagnosticSeverity.Error)
                     vscode.window.showErrorMessage("GTA3script: " + diag.message);
+                else if(severity == vscode.DiagnosticSeverity.Warning)
+                    vscode.window.showWarningMessage("GTA3script: " + diag.message);
                 else
                     vscode.window.showInformationMessage("GTA3script: " + diag.message);
                 continue;
