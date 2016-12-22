@@ -68,7 +68,7 @@ export class GTA3SignatureHelpProvider implements vscode.SignatureHelpProvider {
         let cmdToken = tokens[cmdTokenIndex];
 
         let command = this.gta3ctx.getCommand(currentLine.slice(cmdToken[0], cmdToken[1]));
-        if(command == null) {
+        if(command == null || command.internal) {
             return null;
         }
 

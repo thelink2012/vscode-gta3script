@@ -21,6 +21,7 @@ export interface Command {
     id: number | null;
     hash: number | null;
     args: Argument[];
+    internal: boolean;
 }
 
 export interface CommandsDictionary {
@@ -231,6 +232,7 @@ export class GTA3ScriptController {
                                 id: id,
                                 hash: hash,
                                 args: args,
+                                internal: command.$.Internal == "true",
                             };
                         }
                     }
