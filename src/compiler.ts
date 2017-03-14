@@ -30,7 +30,7 @@ export function invokeCompiler(wsconfig: vscode.WorkspaceConfiguration,
     let cwd = path.dirname(filename);
 
     return requireCompilerPath(wsconfig).then(gta3sc => {
-        return new Promise((resolve, reject) => {
+        return new Promise<CompilerResult[]>((resolve, reject) => {
             let args = pushDataDirToArgs(wsconfig, cfgname, ["compile", filename, `--config=${cfgname}`, "--error-format=json"]);
             let buildflags = wsconfig.get(`buildflags.${cfgname}`, [])
             cp.execFile(gta3sc, args.concat(buildflags), (err, stdout, stderr) => {
@@ -101,7 +101,7 @@ export function queryModels(wsconfig: vscode.WorkspaceConfiguration,
                     askingfor: string = "default"): Promise<ModelsData>
 {
     return requireCompilerPath(wsconfig).then(gta3sc => {
-        return new Promise((resolve, reject) => {
+        return new Promise<ModelsData>((resolve, reject) => {
             let args = pushDataDirToArgs(wsconfig, cfgname, ["query-models", askingfor, `--config=${cfgname}`]);
             cp.execFile(gta3sc, args, (err, stdout, stderr) => {
                 if(err != null) {

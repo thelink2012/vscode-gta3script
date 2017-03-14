@@ -199,7 +199,7 @@ function build(): Promise<void>
         return buildFile(wsconfig, cfgname, editor.document.uri.fsPath);
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         vscode.workspace.findFiles("*.sc", "").then(uris => {
             let promise = Promise.resolve();
             uris.map(uri => uri.fsPath).forEach(file => { // build one after the other
@@ -224,7 +224,7 @@ function buildFile(wsconfig: vscode.WorkspaceConfiguration,
         }
     };
 
-    return invokeCompiler(wsconfig, filename, cfgname).then(diags => {
+    return new Promise<void>(() => {invokeCompiler(wsconfig, filename, cfgname).then(diags => {
         let anyError = false;
 
         let diagnosticMap: Map<string, vscode.Diagnostic[]> = new Map();
@@ -266,5 +266,5 @@ function buildFile(wsconfig: vscode.WorkspaceConfiguration,
         if(anyError) {
             return Promise.reject("Compilation failed.")
         }
-    });
+    })});
 }
