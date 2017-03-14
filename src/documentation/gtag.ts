@@ -1,7 +1,7 @@
 'use strict';
 import {GTA3DocumentationProvider, docrequest, CommandDoc, GameDoc, ArgumentDoc} from './interface';
 import {GTA3ScriptController, Command} from '../controller';
-const cheerio = require('cheerio')
+const json = require('jsonify');
 const toMarkdown = require('to-markdown');
 
 export class GTAGDocumentationProvider implements GTA3DocumentationProvider {
@@ -16,8 +16,9 @@ export class GTAGDocumentationProvider implements GTA3DocumentationProvider {
             return Promise.resolve(null);
         }
 
+        let configName = context.getConfigName();
         let opcode = ("0000" + (command.id).toString(16)).slice(-4).toUpperCase();
-        let uri = `http://gtag.gtagaming.com/opcode-database/opcode/${opcode}/`;
+        let uri = `http://gtag.gtagaming.com/api/opcodedb/v1/opcodes?id=${opcode}`;
         return docrequest(uri).then(body => {
             let result = { 
                 uri: uri, 
@@ -28,37 +29,37 @@ export class GTAGDocumentationProvider implements GTA3DocumentationProvider {
                 examples: [],
             };
 
-            let $ = cheerio.load(body);
-            $(".opcodeinfo > tbody > tr > td").each((i, elem) => {
-                if(i == 0) { // Description
-                    let elemHtml = $(elem).html();
-                    if(elemHtml) {
-                        result.shortDescription = $(`<span>${elemHtml.split(/<br>/)[0]}</span>`).text().split('.')[0]
-                        result.longDescription = this.htmlToMarkdown(elemHtml);
-                    }
-                } else if(i == 1) { // Parameters
-                    let params = $(elem).html().split(/<br>/g)
-                    result.args = params.map(p => {
-                        let m = $(p).text().match(/^\d+\)\s*(?:\(Returned\))?\s*([^\(]*)/);
-                        return { type: null, description: (m && m[1]) || null };
-                    });
-                } else if(i == 2) { // Games 
-                    result.games = $(elem).children("img").map((_, img) => {
-                        let src = $(img).attr('src');
-                        if(src.endsWith("/sa.gif")) return GameDoc.SanAndreas;
-                        if(src.endsWith("/vc.gif")) return GameDoc.Miami;
-                        if(src.endsWith("/iii.gif")) return GameDoc.Liberty;
-                        return null;
-                    }).filter(x => x != null).toArray();
-                }
-            });
+            let info = json.parse(body);
+            if (!info.hasOwnProperty("status") || info.status != "200")
+                Promise.reject("GTAG OpcodeDB API request failed (status: "+info.status+")");
+            if (!info.length) Promise.reject("GTAG OpcodeDB API request: opcode not found");
 
+            for (var id in info.data) {
+                let doc = info.data[id];
+                // replace [opcode]0FFF[/opcode] with the command names
+                let description = doc.description.replace(/\[opcode\]([0-9A-F]{4})\[\/opcode\]/gi, (_, match) => {
+                    let cmd = context.getCommandById(parseInt(match, 16));
+                    if (typeof(cmd) !== 'undefined')
+                        return cmd.name;
+                    return match;
+                });
+                result.longDescription = this.htmlToMarkdown(description);
+                result.shortDescription = description.split('\n')[0];
+                if (doc.supports.gtasa) result.games.push(GameDoc.SanAndreas);
+                if (doc.supports.gtavc) result.games.push(GameDoc.Miami);
+                if (doc.supports.gta3) result.games.push(GameDoc.Liberty);
+                result.args = doc.params.map(p => {
+                    return { type: p.type, description: p.description };
+                });
+                result.uri = doc.url;
+            }
             return result;
         });
     }
 
     private htmlToMarkdown(html: string): string {
-        return toMarkdown(html).replace(/<div[^>]*>([^<]*)<\/div>/g, "$1")
-                               .replace(/<span[^>]*>([^<]*)<\/span>/g, "$1");
+        return toMarkdown(html.replace(/<div[^>]*>([^<]*)<\/div>/g, "$1")
+                              .replace(/<span[^>]*>([^<]*)<\/span>/g, "$1")
+                              .split('\n').join('<br><br>'));
     }
 }
