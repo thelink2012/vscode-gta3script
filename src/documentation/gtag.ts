@@ -1,7 +1,6 @@
 'use strict';
 import {GTA3DocumentationProvider, docrequest, CommandDoc, GameDoc, ArgumentDoc} from './interface';
 import {GTA3ScriptController, Command} from '../controller';
-const json = require('jsonify');
 const toMarkdown = require('to-markdown');
 
 export class GTAGDocumentationProvider implements GTA3DocumentationProvider {
@@ -19,7 +18,7 @@ export class GTAGDocumentationProvider implements GTA3DocumentationProvider {
         let configName = context.getConfigName();
         let opcode = ("0000" + (command.id).toString(16)).slice(-4).toUpperCase();
         let uri = `http://gtag.gtagaming.com/api/opcodedb/v1/opcodes?id=${opcode}`;
-        return docrequest(uri).then(body => {
+        return docrequest(uri).then<CommandDoc>(body => {
             let result = { 
                 uri: uri, 
                 games: new Array<GameDoc>(),
@@ -29,10 +28,11 @@ export class GTAGDocumentationProvider implements GTA3DocumentationProvider {
                 examples: [],
             };
 
-            let info = json.parse(body);
+            let info = JSON.parse(body);
             if (!info.hasOwnProperty("status") || info.status != "200")
-                Promise.reject("GTAG OpcodeDB API request failed (status: "+info.status+")");
-            if (!info.length) Promise.reject("GTAG OpcodeDB API request: opcode not found");
+                return Promise.reject("GTAG OpcodeDB API request failed (status: "+info.status+")");
+            if (!info.length)
+                return Promise.reject("GTAG OpcodeDB API request: opcode not found");
 
             for (var id in info.data) {
                 let doc = info.data[id];

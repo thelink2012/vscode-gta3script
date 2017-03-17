@@ -224,7 +224,7 @@ function buildFile(wsconfig: vscode.WorkspaceConfiguration,
         }
     };
 
-    return new Promise<void>(() => {invokeCompiler(wsconfig, filename, cfgname).then(diags => {
+    return invokeCompiler(wsconfig, filename, cfgname).then<void>(diags => {
         let anyError = false;
 
         let diagnosticMap: Map<string, vscode.Diagnostic[]> = new Map();
@@ -266,5 +266,5 @@ function buildFile(wsconfig: vscode.WorkspaceConfiguration,
         if(anyError) {
             return Promise.reject("Compilation failed.")
         }
-    })});
+    });
 }
