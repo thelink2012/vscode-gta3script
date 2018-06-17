@@ -8,7 +8,7 @@ This is an extension for VSCode which adds support for GTA3script:
 
 ## Features
 
-![Features in 15 Seconds](http://i.imgur.com/4pAZhGC.gif)
+![Features in 15 Seconds](https://i.imgur.com/4pAZhGC.gif)
 
 ## Using
 
@@ -27,7 +27,7 @@ Then, you need to configure the extension with the path to a compiler and path t
     }
 ```
 
-And replace the settings apropriately. The final result should [look like this](http://i.imgur.com/6Sdfx2q.png).
+And replace the settings apropriately. The final result should [look like this](https://i.imgur.com/6Sdfx2q.png).
 
 ### Coding
 
@@ -41,7 +41,7 @@ If, instead of opening a `.sc` file, you open a workspace (`File > Open Folder`)
 
 Additionally, do notice the status bars at the lower right corner while a `.sc` file is open:
 
-![Status Bar](http://i.imgur.com/nYSdJuo.png)
+![Status Bar](https://i.imgur.com/nYSdJuo.png)
 
  + Click on the game status (`GTASA` in the image above) to select the target game to compile and run.
  + Click on the type flag (`CS` in the image above) to select compilation options, including whether to compile a custom script, custom mission or a multifile script.
