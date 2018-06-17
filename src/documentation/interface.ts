@@ -1,6 +1,7 @@
 'use strict';
 import {GTA3ScriptController, Command} from '../controller';
 import * as http from 'http';
+import * as https from 'https';
 
 export enum GameDoc {
     Liberty,
@@ -34,7 +35,8 @@ export interface GTA3DocumentationProvider {
 export function docrequest(uri: string): Promise<string> {
     // TODO provide timeout
     return new Promise((resolve, reject) => {
-        http.get(uri, (res) => {
+        let http_get = uri.startsWith("https:")? https.get : http.get;
+        http_get(uri, (res) => {
             const statusCode = res.statusCode;
             const contentType = res.headers['content-type'];
 

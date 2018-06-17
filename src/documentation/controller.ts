@@ -159,7 +159,7 @@ export class GTA3DocumentationController /* implements IDisposable */ {
                 let provider = this.docs[i];
                 return provider.provideDocumentation(context, command).catch(e => {
                     this.cacheCommandProviderError(provider, command, e);
-                    return performQuery(i+1);
+                    return Promise.reject();
                 }).then(doc => {
                     if(doc == null) {
                         this.cacheCommandDoesNotExist(provider, command);
@@ -167,6 +167,8 @@ export class GTA3DocumentationController /* implements IDisposable */ {
                     }
                     this.cacheCommandDoc(provider, command, doc);
                     return [provider, doc];
+                }).catch(e => {
+                    return performQuery(i+1);
                 });
             }
             // Either undocumented or unavailable.

@@ -82,7 +82,7 @@ export function queryConfigPath(wsconfig: vscode.WorkspaceConfiguration): Promis
         return Promise.resolve(configpath);
 
     return requireCompilerPath(wsconfig).then(gta3sc => {
-        return new Promise((resolve, reject) => {
+        return new Promise<string>((resolve, reject) => {
             cp.execFile(gta3sc, ["query-config-path"], (err, stdout, stderr) => {
                 if(err != null) {
                     return reject(`${err.message}\n${stderr}`);

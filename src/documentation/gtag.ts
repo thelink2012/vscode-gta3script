@@ -17,7 +17,7 @@ export class GTAGDocumentationProvider implements GTA3DocumentationProvider {
 
         let configName = context.getConfigName();
         let opcode = ("0000" + (command.id).toString(16)).slice(-4).toUpperCase();
-        let uri = `http://gtag.gtagaming.com/api/opcodedb/v1/opcodes?id=${opcode}`;
+        let uri = `https://gtagmodding.com/api/opcodedb/v1/opcodes?id=${opcode}`;
         return docrequest(uri).then<CommandDoc>(body => {
             let result = { 
                 uri: uri, 
