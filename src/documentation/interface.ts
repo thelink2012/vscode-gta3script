@@ -1,7 +1,7 @@
 'use strict';
 import {GTA3ScriptController, Command} from '../controller';
-import * as http from 'http';
-import * as https from 'https';
+var http = require('follow-redirects').http;
+var https = require('follow-redirects').https;
 
 export enum GameDoc {
     Liberty,

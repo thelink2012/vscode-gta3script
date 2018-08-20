@@ -106,7 +106,7 @@ export class GTAModdingDocumentationProvider implements GTA3DocumentationProvide
         return text.replace(/\[\[([\w\(\) ]+)\|([^\]]+)\]\]/g, "[$2](http://www.gtamodding.com/wiki/$1)")
                    .replace(/\[\[([^\]]+)\]\]/g, "[$1](http://www.gtamodding.com/wiki/$1)")
                    .replace(/'''([^']+)'''/g, "**$1**")
-                   .replace(/''([^']+)''/g, " _$1_");
+                   .replace(/''([^']+)''/g, " *$1*");
     }
 
     /// Parses a MediaWiki paragraph into plaintext.

@@ -143,6 +143,15 @@ export function activate(context: vscode.ExtensionContext)
     }));
 
     updateConfig(gta3ctx, gameStatusBar, flagsStatusBar);
+
+    let currVersion = vscode.extensions.getExtension("thelink2012.gta3script").packageJSON.version;
+    let prevVersion = context.globalState.get<string>("version");
+    if(prevVersion != currVersion) {
+        console.log("Extension update detected: Clearing cache.")
+        docController.clearCache();
+        docController.saveCache();
+        context.globalState.update('version', currVersion);
+    }
 }
 
 function updateConfig(gta3ctx: GTA3ScriptController,

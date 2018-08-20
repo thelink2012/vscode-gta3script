@@ -10,7 +10,7 @@
         "url": "https://github.com/thelink2012/vscode-gta3script.git"
     },
     "engines": {
-        "vscode": "^1.5.0"
+        "vscode": "^1.23.0"
     },
     "categories": [
         "Languages",
@@ -167,9 +167,10 @@
         "postinstall": "node ./node_modules/vscode/bin/install"
     },
     "dependencies": {
-        "xml2js": "^0.4.17",
         "cheerio": "^0.22.0",
-        "to-markdown": "^3.0.3"
+        "follow-redirects": "^1.5.5",
+        "to-markdown": "^3.0.3",
+        "xml2js": "^0.4.17"
     },
     "devDependencies": {
         "typescript": "^2.0.3",
