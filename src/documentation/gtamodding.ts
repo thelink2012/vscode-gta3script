@@ -17,10 +17,10 @@ export class GTAModdingDocumentationProvider implements GTA3DocumentationProvide
         }
 
         let opcode = ("0000" + (command.id).toString(16)).slice(-4).toUpperCase();
-        let query = `http://www.gtamodding.com/api.php?action=query&titles=${opcode}&prop=revisions&format=json&rvprop=content&rvexpandtemplates&rvsection=0`;
+        let query = `https://gtamods.com/mediawiki/api.php?action=query&titles=${opcode}&prop=revisions&format=json&rvprop=content&rvexpandtemplates&rvsection=0`;
         return docrequest(query).then(body => {
             let result = { 
-                uri: `http://www.gtamodding.com/wiki/${opcode}`, 
+                uri: `https://gtamods.com/wiki/${opcode}`, 
                 games: new Array<GameDoc>(),
                 shortDescription: null,
                 longDescription: null,
@@ -103,8 +103,8 @@ export class GTAModdingDocumentationProvider implements GTA3DocumentationProvide
 
     /// Parses a MediaWiki paragraph into Markdown.
     private toMarkdown(text: string): string {
-        return text.replace(/\[\[([\w\(\) ]+)\|([^\]]+)\]\]/g, "[$2](http://www.gtamodding.com/wiki/$1)")
-                   .replace(/\[\[([^\]]+)\]\]/g, "[$1](http://www.gtamodding.com/wiki/$1)")
+        return text.replace(/\[\[([\w\(\) ]+)\|([^\]]+)\]\]/g, "[$2](https://gtamods.com/wiki/$1)")
+                   .replace(/\[\[([^\]]+)\]\]/g, "[$1](http://gtamods.com/wiki/$1)")
                    .replace(/'''([^']+)'''/g, "**$1**")
                    .replace(/''([^']+)''/g, " *$1*");
     }
