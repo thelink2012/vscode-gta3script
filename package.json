@@ -2,7 +2,7 @@
     "name": "gta3script",
     "displayName": "GTA3script",
     "description": "GTA3script support for VSCode",
-    "version": "0.2.6",
+    "version": "0.2.7",
     "publisher": "thelink2012",
     "license": "MIT",
     "repository": {
