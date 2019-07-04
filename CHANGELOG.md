@@ -1,4 +1,4 @@
- ## 0.2.7 (July 04 2019)
+ ## 0.2.8 (July 04 2019)
 
   + Fixed support for GTAMods Wiki documentation (formerly GTAModding Wiki)
 
