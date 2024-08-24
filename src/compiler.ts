@@ -161,9 +161,8 @@ function getGameDataPath(wsconfig: vscode.WorkspaceConfiguration,
 {
     let gamebin = wsconfig.get<string[]>(`gamebin.${cfgname}`, [null]);
     if(gamebin && gamebin[0]) {
-        let components = gamebin[0].split(/\\|\//g);
-        components.pop();
-        return path.join(...components, "data");
+        let gamepath = path.parse(gamebin[0]);
+        return path.join(gamepath.dir, "data");
     }
     return null;
 }
