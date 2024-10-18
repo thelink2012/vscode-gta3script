@@ -148,6 +148,7 @@
                         "type": "string"
                     },
                     "default": [
+                        "Sanny Builder Library",
                         "GTAModding",
                         "GTAG Opcode Database"
                     ],

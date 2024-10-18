@@ -67,7 +67,7 @@ Although, most of the settings can be set within commands embeded in VSCode by t
                     "gtavc": [null],
                     "gtasa": [null]
                 }
-                "gta3script.docprovider": ["GTAModding", "GTAG Opcode Database"],
+                "gta3script.docprovider": ["Sanny Builder Library", "GTAModding", "GTAG Opcode Database"],
                 "gta3script.config": "gtasa"
 ```
 
