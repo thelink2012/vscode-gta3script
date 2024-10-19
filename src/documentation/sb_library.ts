@@ -91,7 +91,7 @@ export class SannyBuilderDocumentationProvider implements GTA3DocumentationProvi
             for (let i = 0; i < def.args.length; i++)
                 parsed[i].type = this.getArgumentType(def.args[i]);
 
-        return [parsed, parsedInput, parsedOutput] as const;
+        return [parsed, parsedInput, parsedOutput];
     }
 
     protected parseSupportedGames(supportInfo): Array<GameDoc> {
