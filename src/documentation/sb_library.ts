@@ -37,6 +37,8 @@ const ATTRS = {
     "is_positional": "This command's offset in the script is used as the created entity's id"
 };
 
+const DEFAULT_EXTENSION = "default";
+
 enum SupportLevel {
     DoesNotExist = -2,
     Unsupported = -1,
@@ -45,20 +47,12 @@ enum SupportLevel {
     SupportedDiffParams = 2,
 };
 
-const DEFAULT_EXTENSION = "default";
-
 export class SannyBuilderDocumentationProvider implements GTA3DocumentationProvider {
 
     private cache = new Map<string, Map<number, CommandDoc>>();
 
     public getProviderName(): string {
         return "Sanny Builder Library";
-    }
-
-    protected getArgumentType(arg: Argument): string {
-        if (arg.enum != null) return arg.enum;
-        if (arg.entity != null) return arg.entity;
-        return arg.type;
     }
 
     protected parseArgument(param): ArgumentDoc {
@@ -76,7 +70,7 @@ export class SannyBuilderDocumentationProvider implements GTA3DocumentationProvi
         };
     }
 
-    protected parseArguments(command, def: Command): [Array<ArgumentDoc>, Array<ArgumentDoc>, Array<ArgumentDoc>] {
+    protected parseArguments(command): [Array<ArgumentDoc>, Array<ArgumentDoc>, Array<ArgumentDoc>] {
         let input = command.input;
         let output = command.output;
         let parsedInput = new Array<ArgumentDoc>();
@@ -184,12 +178,8 @@ export class SannyBuilderDocumentationProvider implements GTA3DocumentationProvi
 
                                 extension.commands.forEach((command) => {
                                     let commandId = parseInt(command.id, 16);
-                                    let commandDef = context.getCommandById(commandId);
-
-                                    if (commandDef == null) return;
-
                                     let commandSupportInfo = extensionSupportInfo[command.id].slice(0, 3); //We only need info about GTA3, VC and SA
-                                    let [args, inputArgs, outputArgs] = this.parseArguments(command, commandDef);
+                                    let [args, inputArgs, outputArgs] = this.parseArguments(command);
 
                                     let result = {
                                         uri: `${baseUrl}/script/extensions/${extensionName}/${command.id}`,
