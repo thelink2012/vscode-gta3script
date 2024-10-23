@@ -86,11 +86,6 @@ export class SannyBuilderDocumentationProvider implements GTA3DocumentationProvi
         if (output != null) output.forEach((param) => parsedOutput.push(this.parseArgument(param)));
 
         let parsed = parsedInput.concat(parsedOutput);
-
-        if (parsed.length == def.args.length)
-            for (let i = 0; i < def.args.length; i++)
-                parsed[i].type = this.getArgumentType(def.args[i]);
-
         return [parsed, parsedInput, parsedOutput];
     }
 
@@ -138,20 +133,30 @@ export class SannyBuilderDocumentationProvider implements GTA3DocumentationProvi
         addParamsSection("Parameters", inputArgs);
         addParamsSection("Result", outputArgs);
 
-        if (attrs != null || !fromDefaultExtension) {
+        let notes = new Array<string>();
+
+        if (!fromDefaultExtension)
+            notes.push(`This command is available with the [${extension}](${baseUrl}/${extension}) extension.\n`);
+
+        if (inputArgs.length > 0) {
+            let firstArg = inputArgs[0];
+
+            if (firstArg.description.includes('self'))
+                notes.push(`self: ${firstArg.type} must [exist](${baseUrl}?q=constructor:${firstArg.type}) prior to using this command.\n`);
+        }
+        
+        if (attrs != null) {
+            for (let attr in attrs) {
+                let note = ATTRS[attr];
+
+                if (note != null) notes.push(`${note}.\n`);
+            }
+        }
+
+        if (notes.length > 0) {
             longDescription.push("***\n");
             longDescription.push("### Notes\n");
-
-            if (!fromDefaultExtension)
-                longDescription.push(`This command is available with the [${extension}](${baseUrl}/${extension}) extension.\n`);
-
-            if (attrs != null) {
-                for (let attr in attrs) {
-                    let note = ATTRS[attr];
-    
-                    if (note != null) longDescription.push(`${note}.\n`);
-                }
-            }
+            longDescription.push(...notes);
         }
 
         return longDescription.join('\n');
