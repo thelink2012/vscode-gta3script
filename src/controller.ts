@@ -157,13 +157,23 @@ export class GTA3ScriptController {
         const addConfigs = new Array<string>();
 
         try {
+            let hasDataDir = false;
+
             for await (const line of rl) {
                 const arg = line.split("=");
     
-                if (arg.length == 2 && arg[0].trim() === "--add-config") {
-                    addConfigs.push(arg[1].trim());
+                if (arg.length == 2) {
+                    const key = arg[0].trim();
+
+                    if (key === "--add-config") {
+                        addConfigs.push(arg[1].trim());
+                    } else if (key === "--datadir") {
+                        hasDataDir = true;
+                    }
                 }
             }
+
+            if (!hasDataDir) addConfigs.push("default.xml");
         } catch (err) {
             return Promise.resolve([]);
         }
