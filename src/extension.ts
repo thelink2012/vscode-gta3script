@@ -154,6 +154,8 @@ export function activate(context: vscode.ExtensionContext)
     }
 }
 
+// TODO export function deactivate() {}
+
 function updateConfig(gta3ctx: GTA3ScriptController,
                       gameStatusBar: vscode.StatusBarItem,
                       flagsStatusBar: vscode.StatusBarItem) 

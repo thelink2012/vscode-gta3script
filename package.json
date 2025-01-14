@@ -1,182 +1,189 @@
 {
-    "name": "gta3script",
-    "displayName": "GTA3script",
-    "description": "GTA3script support for VSCode",
-    "version": "0.2.9",
-    "publisher": "thelink2012",
-    "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/thelink2012/vscode-gta3script.git"
-    },
-    "engines": {
-        "vscode": "^1.23.0"
-    },
-    "categories": [
-        "Languages",
-        "Snippets"
+  "name": "gta3script",
+  "displayName": "GTA3script",
+  "description": "GTA3script support for VSCode",
+  "version": "0.3.0",
+  "publisher": "thelink2012",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thelink2012/vscode-gta3script.git"
+  },
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+      "Programming Languages",
+      "Snippets"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+        {
+            "id": "gta3script",
+            "extensions": [
+                ".sc"
+            ],
+            "aliases": [
+                "GTA3script"
+            ],
+            "configuration": "./language-configuration.json"
+        }
     ],
-    "activationEvents": [
-        "onLanguage:gta3script",
-        "onCommand:gta3script.cmd.build",
-        "onCommand:gta3script.cmd.buildrun",
-        "onCommand:gta3script.cmd.run",
-        "onCommand:gta3script.cmd.selectgame",
-        "onCommand:gta3script.cmd.buildflags"
+    "grammars": [
+        {
+            "language": "gta3script",
+            "scopeName": "source.gta3script",
+            "path": "./syntaxes/gta3script.tmLanguage"
+        }
     ],
-    "main": "./out/src/extension",
-    "contributes": {
-        "languages": [
-            {
-                "id": "gta3script",
-                "extensions": [
-                    ".sc"
+    "commands": [
+        {
+            "command": "gta3script.cmd.build",
+            "title": "GTA3Script: Build",
+            "description": "Builds the current script or current workspace."
+        },
+        {
+            "command": "gta3script.cmd.buildrun",
+            "title": "GTA3Script: Build and Run Game",
+            "description": "Builds the current script or current workspace and runs the game."
+        },
+        {
+            "command": "gta3script.cmd.run",
+            "title": "GTA3Script: Run Game",
+            "description": "Runs the game."
+        },
+        {
+            "command": "gta3script.cmd.selectgame",
+            "title": "GTA3Script: Select Game",
+            "description": "Selects the game configuration to use."
+        },
+        {
+            "command": "gta3script.cmd.buildflags",
+            "title": "GTA3Script: Build Flags",
+            "description": "Configure compilation flags."
+        },
+        {
+            "command": "gta3script.cmd.cleardocs",
+            "title": "GTA3Script: Clear Documentation Cache",
+            "description": "Clears the documentation cache"
+        }
+    ],
+    "keybindings": [
+        {
+            "command": "gta3script.cmd.build",
+            "key": "f6"
+        },
+        {
+            "command": "gta3script.cmd.buildrun",
+            "key": "f7"
+        },
+        {
+            "command": "gta3script.cmd.run",
+            "key": "ctrl+f7"
+        }
+    ],
+    "configuration": {
+        "type": "object",
+        "title": "GTA3script configuration",
+        "properties": {
+            "gta3script.compiler": {
+                "type": [
+                    "string",
+                    "null"
                 ],
-                "aliases": [
-                    "GTA3script"
+                "default": null,
+                "description": "Specifies the path to the script compiler."
+            },
+            "gta3script.configpath": {
+                "type": [
+                    "string",
+                    "null"
                 ],
-                "configuration": "./language-configuration.json"
-            }
-        ],
-        "grammars": [
-            {
-                "language": "gta3script",
-                "scopeName": "source.gta3script",
-                "path": "./syntaxes/gta3script.tmLanguage"
-            }
-        ],
-        "commands": [
-            {
-                "command": "gta3script.cmd.build",
-                "title": "GTA3Script: Build",
-                "description": "Builds the current script or current workspace."
+                "default": null,
+                "description": "Specifies the path to the script configuration. If not set, this path will be queried from the compiler."
             },
-            {
-                "command": "gta3script.cmd.buildrun",
-                "title": "GTA3Script: Build and Run Game",
-                "description": "Builds the current script or current workspace and runs the game."
-            },
-            {
-                "command": "gta3script.cmd.run",
-                "title": "GTA3Script: Run Game",
-                "description": "Runs the game."
-            },
-            {
-                "command": "gta3script.cmd.selectgame",
-                "title": "GTA3Script: Select Game",
-                "description": "Selects the game configuration to use."
-            },
-            {
-                "command": "gta3script.cmd.buildflags",
-                "title": "GTA3Script: Build Flags",
-                "description": "Configure compilation flags."
-            },
-            {
-                "command": "gta3script.cmd.cleardocs",
-                "title": "GTA3Script: Clear Documentation Cache",
-                "description": "Clears the documentation cache"
-            }
-        ],
-        "keybindings": [
-            {
-                "command": "gta3script.cmd.build",
-                "key": "f6"
-            },
-            {
-                "command": "gta3script.cmd.buildrun",
-                "key": "f7"
-            },
-            {
-                "command": "gta3script.cmd.run",
-                "key": "ctrl+f7"
-            }
-        ],
-        "configuration": {
-            "type": "object",
-            "title": "GTA3script configuration",
-            "properties": {
-                "gta3script.compiler": {
-                    "type": [
-                        "string",
-                        "null"
+            "gta3script.buildflags": {
+                "type": "object",
+                "default": {
+                    "gta3": [
+                        "--cs"
                     ],
-                    "default": null,
-                    "description": "Specifies the path to the script compiler."
-                },
-                "gta3script.configpath": {
-                    "type": [
-                        "string",
-                        "null"
+                    "gtavc": [
+                        "--cs"
                     ],
-                    "default": null,
-                    "description": "Specifies the path to the script configuration. If not set, this path will be queried from the compiler."
+                    "gtasa": [
+                        "--guesser",
+                        "--cs"
+                    ]
                 },
-                "gta3script.buildflags": {
-                    "type": "object",
-                    "default": {
-                        "gta3": [
-                            "--cs"
-                        ],
-                        "gtavc": [
-                            "--cs"
-                        ],
-                        "gtasa": [
-                            "--guesser",
-                            "--cs"
-                        ]
-                    },
-                    "description": "Specifies build flags to be sent to the compiler for each configuration type."
-                },
-                "gta3script.gamebin": {
-                    "type": "object",
-                    "default": {
-                        "gta3": [
-                            null
-                        ],
-                        "gtavc": [
-                            null
-                        ],
-                        "gtasa": [
-                            null
-                        ]
-                    },
-                    "description": "Specifies the executable of the game for each configuration type."
-                },
-                "gta3script.docprovider": {
-                    "type": "array",
-                    "item": {
-                        "type": "string"
-                    },
-                    "default": [
-                        "GTAModding",
-                        "GTAG Opcode Database"
+                "description": "Specifies build flags to be sent to the compiler for each configuration type."
+            },
+            "gta3script.gamebin": {
+                "type": "object",
+                "default": {
+                    "gta3": [
+                        null
                     ],
-                    "description": "Which providers, in which order, to use when querying documentation. Changing requires to restart VSCode."
+                    "gtavc": [
+                        null
+                    ],
+                    "gtasa": [
+                        null
+                    ]
                 },
-                "gta3script.config": {
-                    "type": "string",
-                    "default": "gtasa",
-                    "description": "Which game configuration to work with."
-                }
+                "description": "Specifies the executable of the game for each configuration type."
+            },
+            "gta3script.docprovider": {
+                "type": "array",
+                "item": {
+                    "type": "string"
+                },
+                "default": [
+                    "GTAModding",
+                    "GTAG Opcode Database"
+                ],
+                "description": "Which providers, in which order, to use when querying documentation. Changing requires to restart VSCode."
+            },
+            "gta3script.config": {
+                "type": "string",
+                "default": "gtasa",
+                "description": "Which game configuration to work with."
             }
         }
-    },
-    "scripts": {
-        "vscode:prepublish": "tsc -p ./",
-        "compile": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install"
-    },
-    "dependencies": {
-        "cheerio": "^0.22.0",
-        "follow-redirects": "^1.5.5",
-        "to-markdown": "^3.0.3",
-        "xml2js": "^0.4.17"
-    },
-    "devDependencies": {
-        "typescript": "^2.0.3",
-        "vscode": "^1.0.0",
-        "mocha": "^2.3.3",
-        "@types/node": "^6.0.40",
-        "@types/mocha": "^2.2.32"
     }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && npm run lint && node esbuild.mjs",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.mjs --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "npm run check-types && npm run lint && node esbuild.mjs --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "dependencies": {
+    "cheerio": "^0.22.0",
+    "follow-redirects": "^1.5.5",
+    "to-markdown": "^3.0.3",
+    "xml2js": "^0.4.17"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.96.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@typescript-eslint/eslint-plugin": "^8.17.0",
+    "@typescript-eslint/parser": "^8.17.0",
+    "eslint": "^9.16.0",
+    "esbuild": "^0.24.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.7.2",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1"
+  }
 }
