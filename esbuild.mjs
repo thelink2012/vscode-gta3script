@@ -1,7 +1,7 @@
-import esbuild from "esbuild"
-import fs from "fs"
-import module from "module"
-import path from "path"
+import esbuild from "esbuild";
+import fs from "fs";
+import module from "module";
+import path from "path";
 
 const production = process.argv.includes('--production');
 const watch = process.argv.includes('--watch');
@@ -29,6 +29,7 @@ const esbuildProblemMatcherPlugin = {
 
 /**** BEGIN jsdom-patch */
 /**** https://github.com/evanw/esbuild/issues/1311 */
+/**** TODO get rid of this */
 const EXTENSIONS = {
 	".cjs": "dynamic",
 	".mjs": "module",

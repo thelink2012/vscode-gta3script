@@ -57,7 +57,7 @@ export function activate(context: vscode.ExtensionContext)
     buildingBar.hide();
     context.subscriptions.push(buildingBar);
     
-    const startBuildingBar = (): NodeJS.Timer => {
+    const startBuildingBar = (): NodeJS.Timeout => {
         const spinning = "|/-\\";
         let currentSpin = 0;
         buildingBar.text = spinning[currentSpin++];
@@ -67,7 +67,7 @@ export function activate(context: vscode.ExtensionContext)
         }, 50);
     };
 
-    const stopBuildingBar = (timer: NodeJS.Timer) => {
+    const stopBuildingBar = (timer: NodeJS.Timeout) => {
         clearInterval(timer);
         buildingBar.hide();
     };
