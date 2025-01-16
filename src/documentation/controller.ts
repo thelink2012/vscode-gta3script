@@ -26,7 +26,7 @@ export class GTA3DocumentationController /* implements IDisposable */ {
     private docs: GTA3DocumentationProvider[];
     private cachedDocs: CachedDocDictionary;
     private isCacheDirty: boolean;
-    private cacheTimer: NodeJS.Timer;
+    private cacheTimer: NodeJS.Timeout;
 
     constructor(providers: GTA3DocumentationProvider[],
                 private globalStorage: vscode.Memento) {

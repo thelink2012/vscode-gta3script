@@ -51,7 +51,8 @@ export class GTA3CompletionItemProvider implements vscode.CompletionItemProvider
         if(item.kind != vscode.CompletionItemKind.Function || item.documentation != null)
             return Promise.resolve(item);
 
-        let command = this.gta3ctx.getCommand(item.label);
+        const label = typeof item.label === "string" ? item.label : item.label.label;
+        let command = this.gta3ctx.getCommand(label);
         return this.gta3ctx.queryDocumentation(command).then((doc) => {
             // Note: this mutates this.cachedItems, but it's okay.
             item.documentation = doc.longDescription? new vscode.MarkdownString(doc.longDescription) : null;
