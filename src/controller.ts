@@ -5,6 +5,7 @@ import {queryConfigPath, queryModels} from './compiler';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 const xml2js = require('xml2js');
+const readline = require('readline');
 
 export interface Argument {
     type: string;
@@ -148,6 +149,28 @@ export class GTA3ScriptController {
         });
     }
 
+    private async loadAdditionalConfigs(configpath: string): Promise<Array<string>> {
+        const rl = readline.createInterface({
+            input: fs.createReadStream(`${configpath}/commandline.txt`),
+            crlfDelay: Infinity
+        });
+        const addConfigs = new Array<string>();
+
+        try {
+            for await (const line of rl) {
+                const arg = line.split("=");
+    
+                if (arg.length == 2 && arg[0].trim() === "--add-config") {
+                    addConfigs.push(arg[1].trim());
+                }
+            }
+        } catch (err) {
+            return Promise.resolve([]);
+        }
+
+        return addConfigs;
+    }
+
     private loadConfigPath(configpath: string): Promise<ConfigData> {
         let promiseList = [];
         
@@ -165,21 +188,25 @@ export class GTA3ScriptController {
             });
         };
 
+        promiseList.push(tryParsingConfigFile("../gta3sc.xml"));
         promiseList.push(tryParsingConfigFile("alternators.xml"));
         promiseList.push(tryParsingConfigFile("commands.xml"));
         promiseList.push(tryParsingConfigFile("constants.xml"));
         promiseList.push(tryParsingConfigFile("cleo.xml"));
 
-        return Promise.all(promiseList).then(cfgList => {
-            let allCommands = cfgList.map(c => c.commands);
-            let allAlternators = cfgList.map(c => c.alternators);
-            let allEnums = cfgList.map(c => c.enums);
-
-            return {  // ConfigData
-                commands: Object.assign({}, ...allCommands),
-                alternators: Object.assign({}, ...allAlternators),
-                enums: Object.assign({}, ...allEnums),
-            };
+        return this.loadAdditionalConfigs(configpath).then(addConfigs => {
+            promiseList.push(...addConfigs.map(configFile => tryParsingConfigFile(configFile)));
+            return Promise.all(promiseList).then(cfgList => {
+                let allCommands = cfgList.map(c => c.commands);
+                let allAlternators = cfgList.map(c => c.alternators);
+                let allEnums = cfgList.map(c => c.enums);
+    
+                return {  // ConfigData
+                    commands: Object.assign({}, ...allCommands),
+                    alternators: Object.assign({}, ...allAlternators),
+                    enums: Object.assign({}, ...allEnums),
+                };
+            });
         });
     }
 
