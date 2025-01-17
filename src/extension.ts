@@ -16,6 +16,7 @@ let diagnosticCollection: vscode.DiagnosticCollection;
 import { GTA3DocumentationController } from './documentation/controller';
 import { GTAGDocumentationProvider } from './documentation/gtag';
 import { GTAModdingDocumentationProvider } from './documentation/gtamodding';
+import { SannyBuilderDocumentationProvider } from './documentation/sb_library';
 
 export function activate(context: vscode.ExtensionContext) 
 {
@@ -25,6 +26,7 @@ export function activate(context: vscode.ExtensionContext)
                                        .get<[string]>("docprovider").map(v => {
         if(v == "GTAModding") return new GTAModdingDocumentationProvider();
         if(v == "GTAG Opcode Database") return new GTAGDocumentationProvider();
+        if(v == "Sanny Builder Library") return new SannyBuilderDocumentationProvider();
         return null;
     }).filter(v => v != null);
 
