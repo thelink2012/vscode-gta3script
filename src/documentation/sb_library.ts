@@ -49,6 +49,7 @@ enum SupportLevel {
 
 export class SannyBuilderDocumentationProvider implements GTA3DocumentationProvider {
 
+    // TODO purge unused cache if it becomes too big
     private cache = new Map<string, Map<number, CommandDoc>>();
 
     public getProviderName(): string {
