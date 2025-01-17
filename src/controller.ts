@@ -95,7 +95,7 @@ export class GTA3ScriptController {
 
     /// Gets a specific constant list.
     public getEnumeration(name: string) : Array<[string, number]> {
-        if(name == "CARPEDMODEL") {
+        if(name == "DEFAULTMODEL") {
             return this.models.default;
         } else if(name == "MODEL") {
             // TODO FIXME this doesn't look very efficient.

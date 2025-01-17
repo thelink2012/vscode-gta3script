@@ -98,7 +98,7 @@ export function queryConfigPath(wsconfig: vscode.WorkspaceConfiguration): Promis
 /// Queries list of models from the script compiler.
 export function queryModels(wsconfig: vscode.WorkspaceConfiguration,
                     cfgname: string,
-                    askingfor: string = "default"): Promise<ModelsData>
+                    askingfor: string = "all"): Promise<ModelsData>
 {
     return requireCompilerPath(wsconfig).then(gta3sc => {
         return new Promise<ModelsData>((resolve, reject) => {
